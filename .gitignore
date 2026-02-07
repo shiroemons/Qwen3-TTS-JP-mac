@@ -22,3 +22,10 @@ wheels/
 .vscode/
 venv/
 env/
+.venv/
+.devbox/
+.DS_Store
+models/
+*.wav
+output/
+*.pt

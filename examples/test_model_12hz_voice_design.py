@@ -18,21 +18,23 @@ import torch
 import soundfile as sf
 
 from qwen_tts import Qwen3TTSModel
+from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env, sync_device
 
 
 def main():
-    device = "cuda:0"
+    device = detect_device()
+    setup_mps_env()
     MODEL_PATH = "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign/"
 
     tts = Qwen3TTSModel.from_pretrained(
         MODEL_PATH,
         device_map=device,
-        dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
+        dtype=detect_dtype(device),
+        attn_implementation=detect_attn_implementation(device),
     )
 
     # -------- Single --------
-    torch.cuda.synchronize()
+    sync_device(device)
     t0 = time.time()
 
     wavs, sr = tts.generate_voice_design(
@@ -41,7 +43,7 @@ def main():
         instruct="体现撒娇稚嫩的萝莉女声，音调偏高且起伏明显，营造出黏人、做作又刻意卖萌的听觉效果。",
     )
 
-    torch.cuda.synchronize()
+    sync_device(device)
     t1 = time.time()
     print(f"[VoiceDesign Single] time: {t1 - t0:.3f}s")
 
@@ -58,7 +60,7 @@ def main():
         "Speak in an incredulous tone, but with a hint of panic beginning to creep into your voice."
     ]
 
-    torch.cuda.synchronize()
+    sync_device(device)
     t0 = time.time()
 
     wavs, sr = tts.generate_voice_design(
@@ -68,7 +70,7 @@ def main():
         max_new_tokens=2048,
     )
 
-    torch.cuda.synchronize()
+    sync_device(device)
     t1 = time.time()
     print(f"[VoiceDesign Batch] time: {t1 - t0:.3f}s")
 

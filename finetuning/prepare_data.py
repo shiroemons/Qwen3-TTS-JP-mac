@@ -18,16 +18,21 @@ import argparse
 import json
 
 from qwen_tts import Qwen3TTSTokenizer
+from qwen_tts.utils.device import detect_device, setup_mps_env
 
 BATCH_INFER_NUM = 32
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--device", type=str, default="cuda:0")
+    parser.add_argument("--device", type=str, default="auto")
     parser.add_argument("--tokenizer_model_path", type=str, default="Qwen/Qwen3-TTS-Tokenizer-12Hz")
     parser.add_argument("--input_jsonl", type=str, required=True)
     parser.add_argument("--output_jsonl", type=str, required=True)
     args = parser.parse_args()
+
+    if args.device == "auto":
+        args.device = detect_device()
+    setup_mps_env()
 
     tokenizer_12hz = Qwen3TTSTokenizer.from_pretrained(
         args.tokenizer_model_path,

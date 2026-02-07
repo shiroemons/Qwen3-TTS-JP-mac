@@ -1,0 +1,28 @@
+Qwen3-TTS-JP-mac
+Copyright 2026 shiroemons
+
+This product includes software developed by:
+
+1. Qwen3-TTS
+   Copyright 2026 Alibaba Qwen Team
+   Licensed under the Apache License, Version 2.0
+   https://github.com/QwenLM/Qwen3-TTS
+
+2. Qwen3-TTS-JP
+   Copyright 2026 hiroki-abe-58
+   Licensed under the Apache License, Version 2.0
+   https://github.com/hiroki-abe-58/Qwen3-TTS-JP
+
+3. faster-whisper (optional dependency)
+   Copyright SYSTRAN
+   Licensed under the MIT License
+   https://github.com/SYSTRAN/faster-whisper
+
+Modifications in this fork (Qwen3-TTS-JP-mac):
+- macOS Apple Silicon (MPS) device support with automatic detection
+- Japanese GUI localization for Gradio demo
+- Whisper automatic transcription integration (optional)
+- FlashAttention-2 replaced with SDPA for macOS compatibility
+- Device/dtype/attention auto-detection utilities (qwen_tts/utils/device.py)
+- devbox + uv development environment setup
+- macOS-focused setup script and documentation

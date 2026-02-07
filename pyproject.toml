@@ -4,15 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qwen-tts"
-version = "0.1.1"
-description = "Qwen-TTS python package"
+version = "0.2.0"
+description = "Qwen3-TTS macOS Apple Silicon 対応・日本語ローカライズ版"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
@@ -26,14 +23,17 @@ dependencies = [
   "librosa",
   "torchaudio",
   "soundfile",
-  "sox",
   "onnxruntime",
   "einops",
 ]
 
+[project.optional-dependencies]
+whisper = ["faster-whisper"]
+
 [project.urls]
-Homepage = "https://github.com/Qwen/Qwen3-TTS"
-Repository = "https://github.com/Qwen/Qwen3-TTS"
+Homepage = "https://github.com/shiroemons/Qwen3-TTS-JP-mac"
+Repository = "https://github.com/shiroemons/Qwen3-TTS-JP-mac"
+Upstream = "https://github.com/QwenLM/Qwen3-TTS"
 
 [project.scripts]
 qwen-tts-demo = "qwen_tts.cli.demo:main"

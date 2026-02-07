@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.13.2/.schema/devbox.schema.json",
+  "packages": [
+    "python@3.12",
+    "uv",
+    "sox",
+    "ffmpeg",
+    "git-lfs"
+  ],
+  "env": {
+    "PYTORCH_ENABLE_MPS_FALLBACK": "1"
+  },
+  "shell": {
+    "init_hook": [
+      "echo 'Qwen3-TTS-JP-mac dev environment'"
+    ],
+    "scripts": {
+      "setup": "uv sync --extra whisper",
+      "demo:custom": "uv run python -m qwen_tts.cli.demo Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+      "demo:design": "uv run python -m qwen_tts.cli.demo Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "demo:clone": "uv run python -m qwen_tts.cli.demo Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+      "test": "uv run python -c 'import qwen_tts; print(\"OK\")'",
+      "check-mps": "uv run python -c 'import torch; print(f\"MPS: {torch.backends.mps.is_available()}\")'",
+      "check-device": "uv run python -c 'from qwen_tts.utils.device import detect_device; print(f\"Device: {detect_device()}\")'"
+    }
+  }
+}

@@ -22,6 +22,7 @@ import torch
 from accelerate import Accelerator
 from dataset import TTSDataset
 from qwen_tts.inference.qwen3_tts_model import Qwen3TTSModel
+from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
 from safetensors.torch import save_file
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -39,16 +40,35 @@ def train():
     parser.add_argument("--lr", type=float, default=2e-5)
     parser.add_argument("--num_epochs", type=int, default=3)
     parser.add_argument("--speaker_name", type=str, default="speaker_test")
+    parser.add_argument("--device", type=str, default="auto", help="Device (auto/cuda/mps/cpu)")
+    parser.add_argument("--no-flash-attn", action="store_true", default=False, help="Disable FlashAttention-2")
     args = parser.parse_args()
 
-    accelerator = Accelerator(gradient_accumulation_steps=4, mixed_precision="bf16", log_with="tensorboard")
+    if args.device == "auto":
+        device = detect_device()
+    else:
+        device = args.device
+    setup_mps_env()
+
+    # MPS does not support bf16 mixed precision training
+    if "mps" in device or "cpu" in device:
+        mixed_precision = "no"
+    else:
+        mixed_precision = "bf16"
+    accelerator = Accelerator(gradient_accumulation_steps=4, mixed_precision=mixed_precision, log_with="tensorboard")
 
     MODEL_PATH = args.init_model_path
 
+    # Determine attention implementation
+    if args.no_flash_attn:
+        attn_impl = "sdpa"
+    else:
+        attn_impl = detect_attn_implementation(device)
+
     qwen3tts = Qwen3TTSModel.from_pretrained(
         MODEL_PATH,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
+        torch_dtype=detect_dtype(device),
+        attn_implementation=attn_impl,
     )
     config = AutoConfig.from_pretrained(MODEL_PATH)
 
