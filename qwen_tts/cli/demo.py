@@ -197,6 +197,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Whether to create a public Gradio link (default: disabled).",
     )
     parser.add_argument(
+        "--inbrowser/--no-inbrowser",
+        dest="inbrowser",
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Whether to auto-open browser on launch (default: enabled).",
+    )
+    parser.add_argument(
         "--concurrency",
         type=int,
         default=16,
@@ -739,6 +746,7 @@ def main(argv=None) -> int:
         server_name=args.ip,
         server_port=args.port,
         share=args.share,
+        inbrowser=args.inbrowser,
         ssl_verify=True if args.ssl_verify else False,
     )
     if args.ssl_certfile is not None:
