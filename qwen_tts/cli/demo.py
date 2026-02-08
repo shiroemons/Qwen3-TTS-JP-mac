@@ -582,6 +582,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
             f"""
 # Qwen3-TTS-JP-mac デモ
 **チェックポイント:** `{ckpt}`
+
 **モデルタイプ:** `{model_kind}`
 """
         )
