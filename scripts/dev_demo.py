@@ -33,6 +33,14 @@ How it works:
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
+
+# Ensure the project root is on sys.path so that ``qwen_tts`` is importable
+# when this script is executed via ``uv run gradio scripts/dev_demo.py``.
+_PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 import gradio as gr
 
@@ -74,6 +82,4 @@ if gr.NO_RELOAD:
 from qwen_tts.cli.demo import build_demo  # noqa: E402
 
 demo, extra_launch_kwargs = build_demo(tts, ckpt, {})
-demo.theme = extra_launch_kwargs.get("theme")
-demo.css = extra_launch_kwargs.get("css")
-demo.queue()
+demo.queue().launch(inbrowser=True, **extra_launch_kwargs)
