@@ -35,9 +35,9 @@
 
 | モード | モデル | 説明 |
 |---|---|---|
+| **VoiceClone** | `Qwen3-TTS-12Hz-1.7B-Base` | 3秒の音声サンプルから話者をクローン |
 | **CustomVoice** | `Qwen3-TTS-12Hz-1.7B-CustomVoice` | 9種類のプレミアム音声 + 指示による制御 |
 | **VoiceDesign** | `Qwen3-TTS-12Hz-1.7B-VoiceDesign` | 自然言語の説明から音声を生成 |
-| **VoiceClone** | `Qwen3-TTS-12Hz-1.7B-Base` | 3秒の音声サンプルから話者をクローン |
 
 ## 動作環境
 
@@ -58,7 +58,16 @@ cd Qwen3-TTS-JP-mac
 
 ### 2. セットアップ
 
-#### オプション A: devbox を使う（推奨）
+#### オプション A: [devbox](https://www.jetify.com/devbox) を使う（推奨）
+
+[devbox](https://www.jetify.com/devbox) を使うと以下が自動的に設定されます:
+
+- **バージョン固定** — Python 3.12, sox, ffmpeg, git-lfs のバージョンが `devbox.json` で管理され、環境間のバージョンのずれを防止
+- **環境変数** — `PYTORCH_ENABLE_MPS_FALLBACK=1` が自動設定（MPS フォールバック有効化）
+- **ワンコマンド** — `devbox run demo:clone` などの便利なスクリプトが利用可能
+- **ホットリロード** — `devbox run dev:clone` で UI 変更をリアルタイム反映
+- **環境分離** — プロジェクト単位の隔離された環境（グローバル環境を汚さない）
+- **再現性** — 誰でも同じ環境を即座に構築可能
 
 ```bash
 # devbox のインストール（未導入の場合）
@@ -69,18 +78,16 @@ devbox install
 devbox run setup
 ```
 
-#### オプション B: セットアップスクリプト
+#### オプション B: 手動セットアップ ([uv](https://docs.astral.sh/uv/))
 
 ```bash
-bash setup_mac.sh
-```
+# uv のインストール（未導入の場合）
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-#### オプション C: 手動セットアップ (uv)
+# システム依存パッケージのインストール
+brew install sox ffmpeg
 
-```bash
-# 前提: uv, sox, ffmpeg がインストール済み
-# brew install uv sox ffmpeg
-
+# Python 依存関係のインストール
 uv sync --extra whisper
 ```
 
@@ -112,24 +119,24 @@ uv run python -c "from qwen_tts.utils.device import detect_device; print(f'Devic
 
 ### GUI の起動
 
-コマンドラインから:
+devbox を使う場合（推奨）:
 
 ```bash
-uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
-uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign
-uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base
-
-# オプション指定
-uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice \
-  --ip 127.0.0.1 --port 8000 --device auto --dtype auto
-```
-
-devbox 環境の場合:
-
-```bash
+devbox run demo:clone     # VoiceClone (Base)
 devbox run demo:custom    # CustomVoice
 devbox run demo:design    # VoiceDesign
-devbox run demo:clone     # VoiceClone (Base)
+```
+
+uv を使う場合:
+
+```bash
+uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base
+uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
+uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+
+# オプション指定
+uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+  --ip 127.0.0.1 --port 8000 --device auto --dtype auto
 ```
 
 ブラウザで `http://localhost:8000` を開いてください。
@@ -163,6 +170,32 @@ devbox run demo:clone     # VoiceClone (Base)
 
 <details>
 <summary>Python API</summary>
+
+#### VoiceClone
+
+```python
+import soundfile as sf
+from qwen_tts import Qwen3TTSModel
+from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
+
+setup_mps_env()
+device = detect_device()
+
+model = Qwen3TTSModel.from_pretrained(
+    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    device_map=device,
+    dtype=detect_dtype(device),
+    attn_implementation=detect_attn_implementation(device),
+)
+
+wavs, sr = model.generate_voice_clone(
+    text="合成したいテキストをここに入力します。",
+    language="Japanese",
+    ref_audio="reference.wav",
+    ref_text="参照音声のテキスト",
+)
+sf.write("output_clone.wav", wavs[0], sr)
+```
 
 #### CustomVoice
 
@@ -214,32 +247,6 @@ wavs, sr = model.generate_voice_design(
 sf.write("output_design.wav", wavs[0], sr)
 ```
 
-#### VoiceClone
-
-```python
-import soundfile as sf
-from qwen_tts import Qwen3TTSModel
-from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
-
-setup_mps_env()
-device = detect_device()
-
-model = Qwen3TTSModel.from_pretrained(
-    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
-    device_map=device,
-    dtype=detect_dtype(device),
-    attn_implementation=detect_attn_implementation(device),
-)
-
-wavs, sr = model.generate_voice_clone(
-    text="合成したいテキストをここに入力します。",
-    language="Japanese",
-    ref_audio="reference.wav",
-    ref_text="参照音声のテキスト",
-)
-sf.write("output_clone.wav", wavs[0], sr)
-```
-
 </details>
 
 ## Whisper 自動文字起こし
@@ -247,7 +254,10 @@ sf.write("output_clone.wav", wavs[0], sr)
 VoiceClone モードでは、参照音声のテキストが必要です。「ボイスクローン」タブの「自動文字起こし」ボタンで参照テキストを自動生成できます。
 
 ```bash
-# Whisper サポートをインストール
+# devbox の場合（setup に含まれています）
+devbox run setup
+
+# uv の場合
 uv sync --extra whisper
 ```
 
@@ -332,17 +342,17 @@ brew install sox        # Homebrew
 
 ```bash
 # 推論モデル
+uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base
 uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
 uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign
-uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base
 
 # 音声トークナイザー
 uv run huggingface-cli download Qwen/Qwen3-TTS-Tokenizer-12Hz
 
 # 軽量版 (0.6B)
+uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-Base
 uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice
 uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-VoiceDesign
-uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-Base
 ```
 
 ## 開発
@@ -352,14 +362,16 @@ uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-Base
 UI の変更をリアルタイムで確認しながら開発できます。モデルは初回起動時に1回だけ読み込まれ、`qwen_tts/` 配下の `.py` ファイルの変更がブラウザに即座に反映されます。
 
 ```bash
+devbox run dev:clone     # VoiceClone ホットリロード
 devbox run dev:custom    # CustomVoice ホットリロード
 devbox run dev:design    # VoiceDesign ホットリロード
-devbox run dev:clone     # VoiceClone ホットリロード
 ```
 
 ## Fine-tuning
 
 macOS (MPS) での Fine-tuning は**実験的**です。
+
+devbox shell 内の場合（推奨）:
 
 ```bash
 # データ準備
@@ -370,6 +382,23 @@ uv run python finetuning/prepare_data.py \
 
 # SFT 実行
 uv run python finetuning/sft_12hz.py \
+  --device auto \
+  --no-flash-attn \
+  --train_jsonl train_with_codes.jsonl \
+  --batch_size 2 --lr 2e-6 --num_epochs 3
+```
+
+uv を直接使う場合:
+
+```bash
+# データ準備
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python finetuning/prepare_data.py \
+  --device auto \
+  --input_jsonl train_raw.jsonl \
+  --output_jsonl train_with_codes.jsonl
+
+# SFT 実行
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python finetuning/sft_12hz.py \
   --device auto \
   --no-flash-attn \
   --train_jsonl train_with_codes.jsonl \
