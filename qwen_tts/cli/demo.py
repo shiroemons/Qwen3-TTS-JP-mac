@@ -554,6 +554,17 @@ def _detect_model_kind(ckpt: str, tts: Qwen3TTSModel) -> str:
         raise ValueError(f"Unknown Qwen-TTS model type: {mt}")
 
 
+DISCLAIMER_TEXT = """\
+**免責事項**
+
+○ この音声はAIモデルによって自動生成/合成されたものであり、モデルの機能を示すためのデモンストレーション目的でのみ提供されています。不正確または不適切な内容が含まれる場合があります。この音声は開発者/運営者の見解を代表するものではなく、専門的なアドバイスを構成するものでもありません。
+
+○ ユーザーは、この音声の評価、使用、配布、または拡散に関するすべてのリスクと責任を自ら負うものとします。適用法が許容する最大限の範囲において、開発者/運営者は、この音声の使用または使用不能から生じる直接的、間接的、偶発的、または結果的な損害について責任を負いません（法律で免責が認められない場合を除く）。
+
+○ 本サービスを使用して、違法、有害、名誉毀損、詐欺、ディープフェイク、プライバシー/肖像権/著作権/商標を侵害するコンテンツを意図的に生成または複製することは禁止されています。ユーザーがプロンプト、素材、その他の手段によって違法または侵害行為を実施または促進した場合、その法的責任はすべてユーザーが負い、開発者/運営者は一切の責任を負いません。\
+"""
+
+
 def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]) -> tuple[gr.Blocks, Dict[str, Any]]:
     model_kind = _detect_model_kind(ckpt, tts)
 
@@ -708,7 +719,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
             )
             tour_btn.click(None, None, None, js=VOICE_CLONE_TOUR_CLICK_JS)
             with gr.Tabs():
-                with gr.Tab("音声クローンで生成", elem_id="vc-tab-clone"):
+                with gr.Tab("ボイスクローン", elem_id="vc-tab-clone"):
                     with gr.Row():
                         with gr.Column(scale=2):
                             gr.Markdown("### ステップ1：参照音声の設定")
@@ -953,15 +964,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
                     gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2], outputs=[audio_out2, err2])
 
-        gr.Markdown(
-            """
-**免責事項**
-この音声はAIモデルにより自動生成されたものであり、モデルの性能を示す目的でのみ提供されます。
-不正確または不適切な内容が含まれる場合があります。生成された音声は開発者の見解を代表するものではなく、
-専門的な助言を構成するものでもありません。音声の評価、使用、配布に関する責任はすべて利用者が負います。
-違法、有害、名誉毀損、詐欺、ディープフェイク、プライバシー侵害等のコンテンツの生成を目的とした使用は禁止されています。
-"""
-        )
+        gr.Markdown(DISCLAIMER_TEXT)
 
     return demo, {"theme": theme, "css": css}
 

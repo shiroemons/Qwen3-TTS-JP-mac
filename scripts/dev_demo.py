@@ -79,7 +79,12 @@ if gr.NO_RELOAD:
     print("[dev] Model loaded – ready for hot reload")
 
 # ── UI construction (re-runs on every reload) ───────────────────────────────
-from qwen_tts.cli.demo import build_demo  # noqa: E402
+import importlib  # noqa: E402
+
+import qwen_tts.cli.demo as _demo_mod  # noqa: E402
+
+importlib.reload(_demo_mod)
+build_demo = _demo_mod.build_demo
 
 demo, extra_launch_kwargs = build_demo(tts, ckpt, {})
 demo.queue().launch(inbrowser=True, **extra_launch_kwargs)
