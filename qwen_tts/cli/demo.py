@@ -541,6 +541,8 @@ def _audio_to_tuple(audio: Any) -> Optional[Tuple[np.ndarray, int]]:
 
 def _wav_to_gradio_audio(wav: np.ndarray, sr: int) -> Tuple[int, np.ndarray]:
     wav = np.asarray(wav, dtype=np.float32)
+    wav = np.clip(wav, -1.0, 1.0)
+    wav = (wav * 32767).astype(np.int16)
     return sr, wav
 
 
