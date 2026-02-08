@@ -2055,6 +2055,9 @@ class Qwen3TTSForConditionalGeneration(Qwen3TTSPreTrainedModel, GenerationMixin)
             "eos_token_id": eos_token_id
             if eos_token_id is not None
             else self.config.talker_config.codec_eos_token_id,
+            "pad_token_id": eos_token_id
+            if eos_token_id is not None
+            else self.config.talker_config.codec_eos_token_id,
             "repetition_penalty": repetition_penalty,
             "suppress_tokens": [
                 i
