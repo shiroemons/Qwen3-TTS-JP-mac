@@ -1006,6 +1006,19 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
                     gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2, auto_save2], outputs=[audio_out2, err2])
 
+        # 音声アップロードのファイルピッカーから .mp4 を除外
+        demo.load(fn=None, inputs=None, outputs=None, js="""
+() => {
+  const accept = '.wav,.mp3,.ogg,.flac,.m4a,.wma,.aac,.aiff';
+  function restrict() {
+    document.querySelectorAll('#vc-ref-audio input[type="file"], #vc-save-ref-audio input[type="file"]')
+      .forEach(el => { el.accept = accept; });
+  }
+  restrict();
+  new MutationObserver(restrict).observe(document.body, {childList: true, subtree: true});
+}
+""")
+
         gr.Markdown(DISCLAIMER_TEXT)
 
     return demo, {"theme": theme, "css": css}
