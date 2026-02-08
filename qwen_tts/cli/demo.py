@@ -88,6 +88,257 @@ LANG_LABELS_JA: Dict[str, str] = {
     "italian": "イタリア語",
 }
 
+VOICE_CLONE_TOUR_CLICK_JS = """\
+() => {
+  function startTour() {
+    function ensureTab(idx) {
+      let btn;
+      if (idx <= 7) btn = '#vc-tab-clone-button';
+      else if (idx <= 19) btn = '#vc-tab-save-load-button';
+      else btn = '#vc-tab-whisper-button';
+      document.querySelector(btn)?.click();
+    }
+    function getStartIndex() {
+      if (document.querySelector('#vc-tab-whisper-button[aria-selected="true"]')) return 20;
+      if (document.querySelector('#vc-tab-save-load-button[aria-selected="true"]')) return 8;
+      return 0;
+    }
+    const d = window.driver.js.driver({
+      showProgress: true,
+      progressText: '{{current}} / {{total}}',
+      nextBtnText: '次へ',
+      prevBtnText: '戻る',
+      doneBtnText: '完了',
+      onNextClick: () => {
+        ensureTab(d.getActiveIndex() + 1);
+        requestAnimationFrame(() => d.moveNext());
+      },
+      onPrevClick: () => {
+        ensureTab(d.getActiveIndex() - 1);
+        requestAnimationFrame(() => d.movePrevious());
+      },
+      steps: [
+        {
+          element: '#vc-ref-audio',
+          popover: {
+            title: '参照音声',
+            description: '3秒以上の音声サンプルをアップロードしてください（WAV/MP3対応）',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-ref-text',
+          popover: {
+            title: '参照テキスト',
+            description: 'アップロードした音声の書き起こしを入力します。「Whisper 文字起こし」タブで自動生成も可能です',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-xvec-only',
+          popover: {
+            title: 'x-vectorのみ',
+            description: '有効にすると参照テキスト不要で簡易クローンが可能ですが、品質は低下します',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-synth-text',
+          popover: {
+            title: '合成テキスト',
+            description: 'クローンした声で読み上げたい文章を入力してください',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-lang',
+          popover: {
+            title: '言語',
+            description: '合成テキストの言語を選択します',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-generate-btn',
+          popover: {
+            title: 'クローン & 生成',
+            description: 'すべて入力したらクリックして音声を合成します',
+            side: 'top', align: 'center'
+          }
+        },
+        {
+          element: '#vc-audio-out',
+          popover: {
+            title: '出力音声',
+            description: '生成された音声がここに表示されます。再生・ダウンロードが可能です',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-status',
+          popover: {
+            title: 'ステータス',
+            description: '処理の進行状況やエラーメッセージがここに表示されます',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-tab-save-load-button',
+          popover: {
+            title: '音声の保存 / 読込タブ',
+            description: '音声プロファイルを .pt ファイルとして保存・読込できます。同じ話者で繰り返し生成する場合に便利です',
+            side: 'bottom', align: 'center'
+          }
+        },
+        {
+          element: '#vc-save-ref-audio',
+          popover: {
+            title: '参照音声（保存用）',
+            description: 'プロファイルとして保存したい話者の音声サンプルをアップロードします',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-save-ref-text',
+          popover: {
+            title: '参照音声テキスト（保存用）',
+            description: 'アップロードした参照音声の書き起こしテキストを入力します。x-vectorのみモードが無効の場合は必須です',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-save-xvec-only',
+          popover: {
+            title: 'x-vectorのみ使用（保存用）',
+            description: '有効にすると参照テキスト不要でプロファイルを保存できますが、生成品質は低下します',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-save-btn',
+          popover: {
+            title: '音声ファイルを保存',
+            description: '入力した参照音声・テキストから音声プロファイルを作成し、.pt ファイルとして保存します',
+            side: 'top', align: 'center'
+          }
+        },
+        {
+          element: '#vc-save-output',
+          popover: {
+            title: '保存された音声ファイル',
+            description: '生成された .pt ファイルがここに表示されます。クリックしてダウンロードしてください',
+            side: 'top', align: 'center'
+          }
+        },
+        {
+          element: '#vc-load-file',
+          popover: {
+            title: 'プロンプトファイルをアップロード',
+            description: '保存済みの .pt ファイルをここにアップロードします。参照音声を再度用意する必要はありません',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-load-text',
+          popover: {
+            title: '合成テキスト（読込用）',
+            description: '読み込んだ音声プロファイルの声で読み上げたい文章を入力してください',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-load-lang',
+          popover: {
+            title: '言語（読込用）',
+            description: '合成テキストの言語を選択します',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-load-gen-btn',
+          popover: {
+            title: '音声読込 & 生成',
+            description: 'アップロードした音声プロファイルと合成テキストを使ってクローン音声を生成します',
+            side: 'top', align: 'center'
+          }
+        },
+        {
+          element: '#vc-load-audio-out',
+          popover: {
+            title: '出力音声（読込用）',
+            description: '読み込んだプロファイルから生成された音声がここに表示されます。再生・ダウンロードが可能です',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-load-status',
+          popover: {
+            title: 'ステータス（読込用）',
+            description: '保存・読込・生成の進行状況やエラーメッセージがここに表示されます',
+            side: 'left', align: 'start'
+          }
+        },
+        {
+          element: '#vc-tab-whisper-button',
+          popover: {
+            title: 'Whisper 文字起こしタブ',
+            description: '参照音声の書き起こしを自動生成する補助ツールです。faster-whisper のインストールが必要です',
+            side: 'bottom', align: 'center'
+          }
+        },
+        {
+          element: '#vc-whisper-model',
+          popover: {
+            title: 'Whisper モデルサイズ',
+            description: '精度と速度のバランスで選択します。base が推奨です。large-v3 は高精度ですが処理が遅くなります',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-whisper-audio',
+          popover: {
+            title: '音声ファイル',
+            description: '文字起こしする音声ファイルをアップロードします。参照音声と同じファイルを使用してください',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-whisper-btn',
+          popover: {
+            title: '文字起こし実行',
+            description: '音声ファイルをアップロードしてクリックすると、Whisper が音声をテキストに変換します',
+            side: 'top', align: 'center'
+          }
+        },
+        {
+          element: '#vc-whisper-result',
+          popover: {
+            title: '文字起こし結果',
+            description: '変換されたテキストがここに表示されます。結果をコピーして「クローン & 生成」タブの「参照テキスト」に貼り付けてください',
+            side: 'left', align: 'start'
+          }
+        }
+      ]
+    });
+    setTimeout(() => d.drive(getStartIndex()), 100);
+  }
+  if (window.driver && window.driver.js) {
+    startTour();
+    return;
+  }
+  if (!document.querySelector('link[href*="driver.js"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css';
+    document.head.appendChild(link);
+  }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js';
+  s.onload = startTour;
+  document.head.appendChild(s);
+}
+"""
+
 
 def _title_case_display(s: str) -> str:
     s = (s or "").strip()
@@ -348,7 +599,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         font=[gr.themes.GoogleFont("Source Sans Pro"), "Arial", "sans-serif"],
     )
 
-    css = ".gradio-container {max-width: none !important;}"
+    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;}"
 
     with gr.Blocks(theme=theme, css=css) as demo:
         gr.Markdown(
@@ -458,21 +709,29 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
             btn.click(run_voice_design, inputs=[text_in, lang_in, design_in], outputs=[audio_out, err])
 
         else:  # voice_clone for base
+            tour_btn = gr.Button(
+                "使い方ガイド", size="sm", variant="secondary",
+                elem_id="vc-tour-btn",
+            )
+            tour_btn.click(None, None, None, js=VOICE_CLONE_TOUR_CLICK_JS)
             with gr.Tabs():
-                with gr.Tab("クローン & 生成"):
+                with gr.Tab("クローン & 生成", elem_id="vc-tab-clone"):
                     with gr.Row():
                         with gr.Column(scale=2):
                             ref_audio = gr.Audio(
                                 label="参照音声",
+                                elem_id="vc-ref-audio",
                             )
                             ref_text = gr.Textbox(
                                 label="参照音声テキスト",
                                 lines=2,
                                 placeholder="x-vectorのみモードが無効の場合は必須",
+                                elem_id="vc-ref-text",
                             )
                             xvec_only = gr.Checkbox(
                                 label="x-vectorのみ使用（参照テキスト不要、品質低下あり）",
                                 value=False,
+                                elem_id="vc-xvec-only",
                             )
 
                         with gr.Column(scale=2):
@@ -480,18 +739,20 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 label="合成テキスト",
                                 lines=4,
                                 placeholder="合成するテキストを入力してください",
+                                elem_id="vc-synth-text",
                             )
                             lang_in = gr.Dropdown(
                                 label="言語",
                                 choices=lang_choices_disp,
                                 value="日本語",
                                 interactive=True,
+                                elem_id="vc-lang",
                             )
-                            btn = gr.Button("クローン & 生成", variant="primary")
+                            btn = gr.Button("クローン & 生成", variant="primary", elem_id="vc-generate-btn")
 
                         with gr.Column(scale=3):
-                            audio_out = gr.Audio(label="出力音声", type="numpy")
-                            err = gr.Textbox(label="ステータス", lines=2)
+                            audio_out = gr.Audio(label="出力音声", type="numpy", elem_id="vc-audio-out")
+                            err = gr.Textbox(label="ステータス", lines=2, elem_id="vc-status")
 
                     def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str):
                         try:
@@ -522,7 +783,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         outputs=[audio_out, err],
                     )
 
-                with gr.Tab("音声の保存 / 読込"):
+                with gr.Tab("音声の保存 / 読込", elem_id="vc-tab-save-load"):
                     with gr.Row():
                         with gr.Column(scale=2):
                             gr.Markdown(
@@ -531,18 +792,20 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 参照音声とテキストをアップロードし、x-vectorのみモードの有無を選択して、再利用可能な音声プロンプトファイルとして保存します。
 """
                             )
-                            ref_audio_s = gr.Audio(label="参照音声", type="numpy")
+                            ref_audio_s = gr.Audio(label="参照音声", type="numpy", elem_id="vc-save-ref-audio")
                             ref_text_s = gr.Textbox(
                                 label="参照音声テキスト",
                                 lines=2,
                                 placeholder="x-vectorのみモードが無効の場合は必須",
+                                elem_id="vc-save-ref-text",
                             )
                             xvec_only_s = gr.Checkbox(
                                 label="x-vectorのみ使用（参照テキスト不要、品質低下あり）",
                                 value=False,
+                                elem_id="vc-save-xvec-only",
                             )
-                            save_btn = gr.Button("音声ファイルを保存", variant="primary")
-                            prompt_file_out = gr.File(label="音声ファイル")
+                            save_btn = gr.Button("音声ファイルを保存", variant="primary", elem_id="vc-save-btn")
+                            prompt_file_out = gr.File(label="音声ファイル", elem_id="vc-save-output")
 
                         with gr.Column(scale=2):
                             gr.Markdown(
@@ -551,23 +814,25 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 保存済みの音声ファイルをアップロードし、新しいテキストで音声合成を行います。
 """
                             )
-                            prompt_file_in = gr.File(label="プロンプトファイルをアップロード")
+                            prompt_file_in = gr.File(label="プロンプトファイルをアップロード", elem_id="vc-load-file")
                             text_in2 = gr.Textbox(
                                 label="合成テキスト",
                                 lines=4,
                                 placeholder="合成するテキストを入力してください",
+                                elem_id="vc-load-text",
                             )
                             lang_in2 = gr.Dropdown(
                                 label="言語",
                                 choices=lang_choices_disp,
                                 value="日本語",
                                 interactive=True,
+                                elem_id="vc-load-lang",
                             )
-                            gen_btn2 = gr.Button("音声読込 & 生成", variant="primary")
+                            gen_btn2 = gr.Button("音声読込 & 生成", variant="primary", elem_id="vc-load-gen-btn")
 
                         with gr.Column(scale=3):
-                            audio_out2 = gr.Audio(label="出力音声", type="numpy")
-                            err2 = gr.Textbox(label="ステータス", lines=2)
+                            audio_out2 = gr.Audio(label="出力音声", type="numpy", elem_id="vc-load-audio-out")
+                            err2 = gr.Textbox(label="ステータス", lines=2, elem_id="vc-load-status")
 
                     def save_prompt(ref_aud, ref_txt: str, use_xvec: bool):
                         try:
@@ -648,7 +913,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
                     gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2], outputs=[audio_out2, err2])
 
-                with gr.Tab("Whisper 文字起こし"):
+                with gr.Tab("Whisper 文字起こし", elem_id="vc-tab-whisper"):
                     with gr.Row():
                         with gr.Column(scale=2):
                             gr.Markdown(
@@ -663,15 +928,18 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 choices=WHISPER_MODELS,
                                 value="base",
                                 interactive=True,
+                                elem_id="vc-whisper-model",
                             )
                             whisper_audio_in = gr.Audio(
                                 label="音声ファイル",
+                                elem_id="vc-whisper-audio",
                             )
-                            whisper_btn = gr.Button("文字起こし", variant="primary")
+                            whisper_btn = gr.Button("文字起こし", variant="primary", elem_id="vc-whisper-btn")
                         with gr.Column(scale=3):
                             whisper_text_out = gr.Textbox(
                                 label="文字起こし結果",
                                 lines=6,
+                                elem_id="vc-whisper-result",
                             )
 
                     def run_whisper_transcribe(audio, model_size: str):
