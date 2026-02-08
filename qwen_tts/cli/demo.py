@@ -119,15 +119,15 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-ref-audio',
           popover: {
-            title: '参照音声',
-            description: '3秒以上の音声サンプルをアップロードしてください（WAV/MP3対応）',
+            title: '① 参照音声（クローン元の音声）',
+            description: 'クローン元となる3秒以上の音声をアップロードしてください（WAV/MP3対応）',
             side: 'right', align: 'start'
           }
         },
         {
           element: '#vc-whisper-model',
           popover: {
-            title: 'Whisper モデル',
+            title: '文字起こし精度',
             description: '精度と速度のバランスで選択します。base が推奨です。large-v3 は高精度ですが処理が遅くなります',
             side: 'right', align: 'start'
           }
@@ -135,7 +135,7 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-whisper-btn',
           popover: {
-            title: '文字起こし',
+            title: '② 自動文字起こし',
             description: '参照音声をアップロード後にクリックすると、Whisper が音声をテキストに変換し参照テキストに自動入力します',
             side: 'right', align: 'start'
           }
@@ -143,15 +143,15 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-ref-text',
           popover: {
-            title: '参照テキスト',
-            description: 'アップロードした音声の書き起こしを入力します。文字起こしボタンで自動入力も可能です',
+            title: '③ 参照テキスト',
+            description: '参照音声の書き起こしを入力します。自動文字起こしボタンで自動入力も可能です',
             side: 'right', align: 'start'
           }
         },
         {
           element: '#vc-xvec-only',
           popover: {
-            title: 'x-vectorのみ',
+            title: '簡易モード(x-vectorのみ)',
             description: '有効にすると参照テキスト不要で簡易クローンが可能ですが、品質は低下します',
             side: 'right', align: 'start'
           }
@@ -159,7 +159,7 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-synth-text',
           popover: {
-            title: '合成テキスト',
+            title: '④ 合成するテキスト',
             description: 'クローンした声で読み上げたい文章を入力してください',
             side: 'left', align: 'start'
           }
@@ -167,15 +167,15 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-lang',
           popover: {
-            title: '言語',
-            description: '合成テキストの言語を選択します',
+            title: '⑤ 言語',
+            description: 'テキストの言語を選択します',
             side: 'left', align: 'start'
           }
         },
         {
           element: '#vc-generate-btn',
           popover: {
-            title: 'クローン & 生成',
+            title: '⑥ 音声生成',
             description: 'すべて入力したらクリックして音声を合成します',
             side: 'top', align: 'center'
           }
@@ -183,7 +183,7 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-audio-out',
           popover: {
-            title: '出力音声',
+            title: '生成された音声',
             description: '生成された音声がここに表示されます。再生・ダウンロードが可能です',
             side: 'left', align: 'start'
           }
@@ -191,7 +191,7 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-status',
           popover: {
-            title: 'ステータス',
+            title: '結果',
             description: '処理の進行状況やエラーメッセージがここに表示されます',
             side: 'left', align: 'start'
           }
@@ -199,47 +199,47 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-tab-save-load-button',
           popover: {
-            title: '音声の保存 / 読込タブ',
-            description: '音声プロファイルを .pt ファイルとして保存・読込できます。同じ話者で繰り返し生成する場合に便利です',
+            title: '音声データの保存・読込タブ',
+            description: '音声データを .pt ファイルとして保存・読込できます。同じ話者で繰り返し生成する場合に便利です',
             side: 'bottom', align: 'center'
           }
         },
         {
           element: '#vc-save-ref-audio',
           popover: {
-            title: '参照音声（保存用）',
-            description: 'プロファイルとして保存したい話者の音声サンプルをアップロードします',
+            title: '① 参照音声（クローン元の音声・保存用）',
+            description: '音声データとして保存したい話者の音声サンプルをアップロードします',
             side: 'right', align: 'start'
           }
         },
         {
           element: '#vc-save-ref-text',
           popover: {
-            title: '参照音声テキスト（保存用）',
-            description: 'アップロードした参照音声の書き起こしテキストを入力します。x-vectorのみモードが無効の場合は必須です',
+            title: '② 参照テキスト（保存用）',
+            description: '参照音声の書き起こしテキストを入力します。簡易モードが無効の場合は必須です',
             side: 'right', align: 'start'
           }
         },
         {
           element: '#vc-save-xvec-only',
           popover: {
-            title: 'x-vectorのみ使用（保存用）',
-            description: '有効にすると参照テキスト不要でプロファイルを保存できますが、生成品質は低下します',
+            title: '簡易モード(x-vectorのみ)（保存用）',
+            description: '有効にすると参照テキスト不要で音声データを保存できますが、生成品質は低下します',
             side: 'right', align: 'start'
           }
         },
         {
           element: '#vc-save-btn',
           popover: {
-            title: '音声ファイルを保存',
-            description: '入力した参照音声・テキストから音声プロファイルを作成し、.pt ファイルとして保存します',
+            title: '③ 保存',
+            description: '入力した参照音声・テキストから音声データを作成し、.pt ファイルとして保存します',
             side: 'top', align: 'center'
           }
         },
         {
           element: '#vc-save-output',
           popover: {
-            title: '保存された音声ファイル',
+            title: '保存された音声データ',
             description: '生成された .pt ファイルがここに表示されます。クリックしてダウンロードしてください',
             side: 'top', align: 'center'
           }
@@ -247,7 +247,7 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-load-file',
           popover: {
-            title: 'プロンプトファイルをアップロード',
+            title: '① 音声データ (.pt)',
             description: '保存済みの .pt ファイルをここにアップロードします。参照音声を再度用意する必要はありません',
             side: 'left', align: 'start'
           }
@@ -255,39 +255,39 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-load-text',
           popover: {
-            title: '合成テキスト（読込用）',
-            description: '読み込んだ音声プロファイルの声で読み上げたい文章を入力してください',
+            title: '② 合成するテキスト（読込用）',
+            description: '読み込んだ音声データの声で読み上げたい文章を入力してください',
             side: 'left', align: 'start'
           }
         },
         {
           element: '#vc-load-lang',
           popover: {
-            title: '言語（読込用）',
-            description: '合成テキストの言語を選択します',
+            title: '③ 言語（読込用）',
+            description: 'テキストの言語を選択します',
             side: 'left', align: 'start'
           }
         },
         {
           element: '#vc-load-gen-btn',
           popover: {
-            title: '音声読込 & 生成',
-            description: 'アップロードした音声プロファイルと合成テキストを使ってクローン音声を生成します',
+            title: '④ 音声生成',
+            description: 'アップロードした音声データとテキストを使ってクローン音声を生成します',
             side: 'top', align: 'center'
           }
         },
         {
           element: '#vc-load-audio-out',
           popover: {
-            title: '出力音声（読込用）',
-            description: '読み込んだプロファイルから生成された音声がここに表示されます。再生・ダウンロードが可能です',
+            title: '生成された音声（読込用）',
+            description: '読み込んだ音声データから生成された音声がここに表示されます。再生・ダウンロードが可能です',
             side: 'left', align: 'start'
           }
         },
         {
           element: '#vc-load-status',
           popover: {
-            title: 'ステータス（読込用）',
+            title: '結果（読込用）',
             description: '保存・読込・生成の進行状況やエラーメッセージがここに表示されます',
             side: 'left', align: 'start'
           }
@@ -575,7 +575,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         font=[gr.themes.GoogleFont("Source Sans Pro"), "Arial", "sans-serif"],
     )
 
-    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;}"
+    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;} .prose h3 {border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 12px;}"
 
     with gr.Blocks() as demo:
         gr.Markdown(
@@ -590,35 +590,38 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         if model_kind == "custom_voice":
             with gr.Row():
                 with gr.Column(scale=2):
+                    gr.Markdown("### テキストと話者の設定")
                     text_in = gr.Textbox(
-                        label="テキスト",
+                        label="① 合成するテキスト",
                         lines=4,
-                        placeholder="合成するテキストを入力してください",
+                        placeholder="読み上げたい文章を入力",
                     )
                     with gr.Row():
                         lang_in = gr.Dropdown(
-                            label="言語",
+                            label="② 言語",
                             choices=lang_choices_disp,
                             value="日本語",
                             interactive=True,
                         )
                         spk_in = gr.Dropdown(
-                            label="話者",
+                            label="③ 話者",
                             choices=spk_choices_disp,
                             value="Vivian",
                             interactive=True,
                         )
                     instruct_in = gr.Textbox(
-                        label="指示（任意）",
+                        label="④ 話し方の指示",
+                        info="任意。口調や感情を指定できます",
                         lines=2,
-                        placeholder="例: とても怒った口調で話してください",
+                        placeholder="例：怒った口調で話してください",
                     )
-                    btn = gr.Button("生成", variant="primary")
+                    btn = gr.Button("⑤ 音声生成", variant="primary")
                 with gr.Column(scale=3):
-                    audio_out = gr.Audio(label="出力音声", type="numpy")
-                    err = gr.Textbox(label="ステータス", lines=2)
+                    gr.Markdown("### 生成結果")
+                    audio_out = gr.Audio(label="生成された音声", type="numpy")
+                    err = gr.Textbox(label="結果", lines=1)
 
-            def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str):
+            def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str, progress=gr.Progress()):
                 try:
                     if not text or not text.strip():
                         return None, "テキストを入力してください。"
@@ -626,6 +629,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         return None, "話者を選択してください。"
                     language = lang_map.get(lang_disp, "Auto")
                     speaker = spk_map.get(spk_disp, spk_disp)
+                    progress(0.0, desc="音声を生成中...")
                     kwargs = _gen_common_kwargs()
                     wavs, sr = tts.generate_custom_voice(
                         text=text.strip(),
@@ -634,7 +638,10 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         instruct=(instruct or "").strip() or None,
                         **kwargs,
                     )
-                    return _wav_to_gradio_audio(wavs[0], sr), "生成完了"
+                    progress(0.9, desc="波形をデコード中...")
+                    result = _wav_to_gradio_audio(wavs[0], sr)
+                    progress(1.0, desc="完了")
+                    return result, "生成完了"
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
@@ -643,35 +650,41 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         elif model_kind == "voice_design":
             with gr.Row():
                 with gr.Column(scale=2):
+                    gr.Markdown("### テキストと声のデザイン")
                     text_in = gr.Textbox(
-                        label="テキスト",
+                        label="① 合成するテキスト",
                         lines=4,
-                        value="It's in the top drawer... wait, it's empty? No way, that's impossible! I'm sure I put it there!"
+                        value="It's in the top drawer... wait, it's empty? No way, that's impossible! I'm sure I put it there!",
+                        placeholder="読み上げたい文章を入力",
                     )
                     with gr.Row():
                         lang_in = gr.Dropdown(
-                            label="言語",
+                            label="② 言語",
                             choices=lang_choices_disp,
                             value="日本語",
                             interactive=True,
                         )
                     design_in = gr.Textbox(
-                        label="音声デザイン指示",
+                        label="③ 声のデザイン",
                         lines=3,
-                        value="Speak in an incredulous tone, but with a hint of panic beginning to creep into your voice."
+                        value="Speak in an incredulous tone, but with a hint of panic beginning to creep into your voice.",
+                        info="どんな声で読み上げるか自由に指示できます",
+                        placeholder="例：落ち着いた低めの男性の声で、ゆっくり丁寧に",
                     )
-                    btn = gr.Button("生成", variant="primary")
+                    btn = gr.Button("④ 音声生成", variant="primary")
                 with gr.Column(scale=3):
-                    audio_out = gr.Audio(label="出力音声", type="numpy")
-                    err = gr.Textbox(label="ステータス", lines=2)
+                    gr.Markdown("### 生成結果")
+                    audio_out = gr.Audio(label="生成された音声", type="numpy")
+                    err = gr.Textbox(label="結果", lines=1)
 
-            def run_voice_design(text: str, lang_disp: str, design: str):
+            def run_voice_design(text: str, lang_disp: str, design: str, progress=gr.Progress()):
                 try:
                     if not text or not text.strip():
                         return None, "テキストを入力してください。"
                     if not design or not design.strip():
                         return None, "音声デザイン指示を入力してください。"
                     language = lang_map.get(lang_disp, "Auto")
+                    progress(0.0, desc="音声を生成中...")
                     kwargs = _gen_common_kwargs()
                     wavs, sr = tts.generate_voice_design(
                         text=text.strip(),
@@ -679,7 +692,10 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         instruct=design.strip(),
                         **kwargs,
                     )
-                    return _wav_to_gradio_audio(wavs[0], sr), "生成完了"
+                    progress(0.9, desc="波形をデコード中...")
+                    result = _wav_to_gradio_audio(wavs[0], sr)
+                    progress(1.0, desc="完了")
+                    return result, "生成完了"
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
@@ -692,56 +708,62 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
             )
             tour_btn.click(None, None, None, js=VOICE_CLONE_TOUR_CLICK_JS)
             with gr.Tabs():
-                with gr.Tab("クローン & 生成", elem_id="vc-tab-clone"):
+                with gr.Tab("音声クローンで生成", elem_id="vc-tab-clone"):
                     with gr.Row():
                         with gr.Column(scale=2):
+                            gr.Markdown("### ステップ1：参照音声の設定")
                             ref_audio = gr.Audio(
-                                label="参照音声",
+                                label="① 参照音声（クローン元の音声）",
                                 elem_id="vc-ref-audio",
                             )
                             with gr.Group(visible=WHISPER_AVAILABLE):
                                 whisper_model_dd = gr.Dropdown(
-                                    label="Whisper モデル",
+                                    label="文字起こし精度",
+                                    info="base推奨。large-v3は高精度だが低速",
                                     choices=WHISPER_MODELS, value="base",
                                     interactive=True, elem_id="vc-whisper-model",
                                 )
                                 whisper_btn = gr.Button(
-                                    "文字起こし", variant="secondary",
+                                    "② 自動文字起こし", variant="secondary",
                                     elem_id="vc-whisper-btn",
                                 )
                             ref_text = gr.Textbox(
-                                label="参照音声テキスト",
+                                label="③ 参照テキスト",
+                                info="参照音声の書き起こし。自動文字起こしで入力可",
                                 lines=2,
-                                placeholder="x-vectorのみモードが無効の場合は必須",
+                                placeholder="参照音声の書き起こしテキストを入力してください",
                                 elem_id="vc-ref-text",
                             )
                             xvec_only = gr.Checkbox(
-                                label="x-vectorのみ使用（参照テキスト不要、品質低下あり）",
+                                label="簡易モード(x-vectorのみ)",
+                                info="テキスト不要で簡易クローン。品質は低下します",
                                 value=False,
                                 elem_id="vc-xvec-only",
                             )
 
                         with gr.Column(scale=2):
+                            gr.Markdown("### ステップ2：テキストの入力")
                             text_in = gr.Textbox(
-                                label="合成テキスト",
+                                label="④ 合成するテキスト",
                                 lines=4,
-                                placeholder="合成するテキストを入力してください",
+                                placeholder="クローンした声で読み上げたい文章を入力",
                                 elem_id="vc-synth-text",
                             )
                             lang_in = gr.Dropdown(
-                                label="言語",
+                                label="⑤ 言語",
                                 choices=lang_choices_disp,
                                 value="日本語",
                                 interactive=True,
                                 elem_id="vc-lang",
                             )
-                            btn = gr.Button("クローン & 生成", variant="primary", elem_id="vc-generate-btn")
+                            btn = gr.Button("⑥ 音声生成", variant="primary", elem_id="vc-generate-btn")
 
                         with gr.Column(scale=3):
-                            audio_out = gr.Audio(label="出力音声", type="numpy", elem_id="vc-audio-out")
-                            err = gr.Textbox(label="ステータス", lines=2, elem_id="vc-status")
+                            gr.Markdown("### 生成結果")
+                            audio_out = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-audio-out")
+                            err = gr.Textbox(label="結果", lines=1, elem_id="vc-status")
 
-                    def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str):
+                    def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str, progress=gr.Progress()):
                         try:
                             if not text or not text.strip():
                                 return None, "合成テキストを入力してください。"
@@ -749,9 +771,11 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             if at is None:
                                 return None, "参照音声をアップロードしてください。"
                             if (not use_xvec) and (not ref_txt or not ref_txt.strip()):
-                                return None, "x-vectorのみモードが無効の場合は、参照テキストが必要です。"
+                                return None, "簡易モードが無効の場合は、参照テキストが必要です。"
                             language = lang_map.get(lang_disp, "Auto")
                             kwargs = _gen_common_kwargs()
+                            progress(0.0, desc="音声の特徴を抽出中...")
+                            progress(0.1, desc="音声コードを生成中...")
                             wavs, sr = tts.generate_voice_clone(
                                 text=text.strip(),
                                 language=language,
@@ -760,7 +784,10 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 x_vector_only_mode=bool(use_xvec),
                                 **kwargs,
                             )
-                            return _wav_to_gradio_audio(wavs[0], sr), "生成完了"
+                            progress(0.9, desc="波形をデコード中...")
+                            result = _wav_to_gradio_audio(wavs[0], sr)
+                            progress(1.0, desc="完了")
+                            return result, "生成完了"
                         except Exception as e:
                             return None, f"{type(e).__name__}: {e}"
 
@@ -770,10 +797,14 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         outputs=[audio_out, err],
                     )
 
-                    def run_whisper_and_fill(ref_aud, model_size: str):
+                    def run_whisper_and_fill(ref_aud, model_size: str, progress=gr.Progress()):
                         if ref_aud is None:
                             return "参照音声をアップロードしてください。"
-                        return _transcribe_audio(ref_aud, model_size)
+                        progress(0.0, desc="Whisperモデルを読み込み中...")
+                        progress(0.3, desc="文字起こし中...")
+                        result = _transcribe_audio(ref_aud, model_size)
+                        progress(1.0, desc="完了")
+                        return result
 
                     if WHISPER_AVAILABLE:
                         whisper_btn.click(
@@ -782,64 +813,67 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             outputs=[ref_text],
                         )
 
-                with gr.Tab("音声の保存 / 読込", elem_id="vc-tab-save-load"):
+                with gr.Tab("音声データの保存・読込", elem_id="vc-tab-save-load"):
                     with gr.Row():
                         with gr.Column(scale=2):
                             gr.Markdown(
                                 """
-### 音声の保存
-参照音声とテキストをアップロードし、x-vectorのみモードの有無を選択して、再利用可能な音声プロンプトファイルとして保存します。
+### 音声データの保存
+参照音声から再利用可能な音声データを作成します。
 """
                             )
-                            ref_audio_s = gr.Audio(label="参照音声", type="numpy", elem_id="vc-save-ref-audio")
+                            ref_audio_s = gr.Audio(label="① 参照音声（クローン元の音声）", type="numpy", elem_id="vc-save-ref-audio")
                             ref_text_s = gr.Textbox(
-                                label="参照音声テキスト",
+                                label="② 参照テキスト",
+                                info="簡易モードが無効の場合は必須",
                                 lines=2,
-                                placeholder="x-vectorのみモードが無効の場合は必須",
+                                placeholder="参照音声の書き起こしテキストを入力してください",
                                 elem_id="vc-save-ref-text",
                             )
                             xvec_only_s = gr.Checkbox(
-                                label="x-vectorのみ使用（参照テキスト不要、品質低下あり）",
+                                label="簡易モード(x-vectorのみ)",
+                                info="テキスト不要で簡易クローン。品質は低下します",
                                 value=False,
                                 elem_id="vc-save-xvec-only",
                             )
-                            save_btn = gr.Button("音声ファイルを保存", variant="primary", elem_id="vc-save-btn")
-                            prompt_file_out = gr.File(label="音声ファイル", elem_id="vc-save-output")
+                            save_btn = gr.Button("③ 保存", variant="primary", elem_id="vc-save-btn")
+                            prompt_file_out = gr.File(label="保存された音声データ", elem_id="vc-save-output")
 
                         with gr.Column(scale=2):
                             gr.Markdown(
                                 """
-### 音声読込 & 生成
-保存済みの音声ファイルをアップロードし、新しいテキストで音声合成を行います。
+### 音声データから生成
+保存済みの .pt ファイルで音声を合成します。
 """
                             )
-                            prompt_file_in = gr.File(label="プロンプトファイルをアップロード", elem_id="vc-load-file")
+                            prompt_file_in = gr.File(label="① 音声データ (.pt)", elem_id="vc-load-file")
                             text_in2 = gr.Textbox(
-                                label="合成テキスト",
+                                label="② 合成するテキスト",
                                 lines=4,
-                                placeholder="合成するテキストを入力してください",
+                                placeholder="読み上げたい文章を入力",
                                 elem_id="vc-load-text",
                             )
                             lang_in2 = gr.Dropdown(
-                                label="言語",
+                                label="③ 言語",
                                 choices=lang_choices_disp,
                                 value="日本語",
                                 interactive=True,
                                 elem_id="vc-load-lang",
                             )
-                            gen_btn2 = gr.Button("音声読込 & 生成", variant="primary", elem_id="vc-load-gen-btn")
+                            gen_btn2 = gr.Button("④ 音声生成", variant="primary", elem_id="vc-load-gen-btn")
 
                         with gr.Column(scale=3):
-                            audio_out2 = gr.Audio(label="出力音声", type="numpy", elem_id="vc-load-audio-out")
-                            err2 = gr.Textbox(label="ステータス", lines=2, elem_id="vc-load-status")
+                            audio_out2 = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-load-audio-out")
+                            err2 = gr.Textbox(label="結果", lines=1, elem_id="vc-load-status")
 
-                    def save_prompt(ref_aud, ref_txt: str, use_xvec: bool):
+                    def save_prompt(ref_aud, ref_txt: str, use_xvec: bool, progress=gr.Progress()):
                         try:
                             at = _audio_to_tuple(ref_aud)
                             if at is None:
                                 return None, "参照音声をアップロードしてください。"
                             if (not use_xvec) and (not ref_txt or not ref_txt.strip()):
-                                return None, "x-vectorのみモードが無効の場合は、参照テキストが必要です。"
+                                return None, "簡易モードが無効の場合は、参照テキストが必要です。"
+                            progress(0.0, desc="音声の特徴を抽出中...")
                             items = tts.create_voice_clone_prompt(
                                 ref_audio=at,
                                 ref_text=(ref_txt.strip() if ref_txt else None),
@@ -850,18 +884,21 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             }
                             fd, out_path = tempfile.mkstemp(prefix="voice_clone_prompt_", suffix=".pt")
                             os.close(fd)
+                            progress(0.5, desc="プロファイルを保存中...")
                             torch.save(payload, out_path)
+                            progress(1.0, desc="完了")
                             return out_path, "生成完了"
                         except Exception as e:
                             return None, f"{type(e).__name__}: {e}"
 
-                    def load_prompt_and_gen(file_obj, text: str, lang_disp: str):
+                    def load_prompt_and_gen(file_obj, text: str, lang_disp: str, progress=gr.Progress()):
                         try:
                             if file_obj is None:
                                 return None, "音声ファイルをアップロードしてください。"
                             if not text or not text.strip():
                                 return None, "合成テキストを入力してください。"
 
+                            progress(0.0, desc="プロファイルを読み込み中...")
                             path = getattr(file_obj, "name", None) or getattr(file_obj, "path", None) or str(file_obj)
                             payload = torch.load(path, map_location="cpu", weights_only=True)
                             if not isinstance(payload, dict) or "items" not in payload:
@@ -896,13 +933,17 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                             language = lang_map.get(lang_disp, "Auto")
                             kwargs = _gen_common_kwargs()
+                            progress(0.2, desc="音声コードを生成中...")
                             wavs, sr = tts.generate_voice_clone(
                                 text=text.strip(),
                                 language=language,
                                 voice_clone_prompt=items,
                                 **kwargs,
                             )
-                            return _wav_to_gradio_audio(wavs[0], sr), "生成完了"
+                            progress(0.9, desc="波形をデコード中...")
+                            result = _wav_to_gradio_audio(wavs[0], sr)
+                            progress(1.0, desc="完了")
+                            return result, "生成完了"
                         except Exception as e:
                             return None, (
                                 f"音声ファイルの読み込みまたは使用に失敗しました。ファイルの形式や内容を確認してください。\n"
