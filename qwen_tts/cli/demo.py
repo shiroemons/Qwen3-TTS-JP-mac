@@ -552,7 +552,7 @@ def _detect_model_kind(ckpt: str, tts: Qwen3TTSModel) -> str:
         raise ValueError(f"Unknown Qwen-TTS model type: {mt}")
 
 
-def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]) -> gr.Blocks:
+def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]) -> tuple[gr.Blocks, Dict[str, Any]]:
     model_kind = _detect_model_kind(ckpt, tts)
 
     supported_langs_raw = None
@@ -575,7 +575,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
     css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;}"
 
-    with gr.Blocks(theme=theme, css=css) as demo:
+    with gr.Blocks() as demo:
         gr.Markdown(
             f"""
 # Qwen3-TTS-JP-mac デモ
@@ -919,7 +919,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 """
         )
 
-    return demo
+    return demo, {"theme": theme, "css": css}
 
 
 def main(argv=None) -> int:
@@ -966,7 +966,7 @@ def main(argv=None) -> int:
     )
 
     gen_kwargs_default = _collect_gen_kwargs(args)
-    demo = build_demo(tts, ckpt, gen_kwargs_default)
+    demo, extra_launch_kwargs = build_demo(tts, ckpt, gen_kwargs_default)
 
     launch_kwargs: Dict[str, Any] = dict(
         server_name=args.ip,
@@ -980,7 +980,7 @@ def main(argv=None) -> int:
     if args.ssl_keyfile is not None:
         launch_kwargs["ssl_keyfile"] = args.ssl_keyfile
 
-    demo.queue(default_concurrency_limit=int(args.concurrency)).launch(**launch_kwargs)
+    demo.queue(default_concurrency_limit=int(args.concurrency)).launch(**launch_kwargs, **extra_launch_kwargs)
     return 0
 
 

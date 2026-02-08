@@ -21,7 +21,10 @@
       "demo:clone": "uv run python -m qwen_tts.cli.demo Qwen/Qwen3-TTS-12Hz-1.7B-Base",
       "test": "uv run python -c 'import qwen_tts; print(\"OK\")'",
       "check-mps": "uv run python -c 'import torch; print(f\"MPS: {torch.backends.mps.is_available()}\")'",
-      "check-device": "uv run python -c 'from qwen_tts.utils.device import detect_device; print(f\"Device: {detect_device()}\")'"
+      "check-device": "uv run python -c 'from qwen_tts.utils.device import detect_device; print(f\"Device: {detect_device()}\")'",
+      "dev:custom": "QWEN_TTS_CHECKPOINT=Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice uv run gradio scripts/dev_demo.py --watch-dirs qwen_tts",
+      "dev:design": "QWEN_TTS_CHECKPOINT=Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign uv run gradio scripts/dev_demo.py --watch-dirs qwen_tts",
+      "dev:clone": "QWEN_TTS_CHECKPOINT=Qwen/Qwen3-TTS-12Hz-1.7B-Base uv run gradio scripts/dev_demo.py --watch-dirs qwen_tts"
     }
   }
 }
