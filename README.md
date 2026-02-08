@@ -82,7 +82,8 @@ devbox run setup
 
 ```bash
 # uv のインストール（未導入の場合）
-curl -LsSf https://astral.sh/uv/install.sh | sh
+brew install uv
+# または: curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # システム依存パッケージのインストール
 brew install sox ffmpeg
