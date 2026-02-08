@@ -117,6 +117,14 @@ class Qwen3TTSModel:
 
         processor = AutoProcessor.from_pretrained(pretrained_model_name_or_path, fix_mistral_regex=True,)
 
+        # Suppress HuggingFace "Setting pad_token_id to eos_token_id" warning
+        # by explicitly setting pad_token_id on the talker's generation_config.
+        talker = getattr(model, "talker", None)
+        if talker is not None and hasattr(talker, "generation_config"):
+            gc = talker.generation_config
+            if gc.pad_token_id is None and gc.eos_token_id is not None:
+                gc.pad_token_id = gc.eos_token_id
+
         generate_defaults = model.generate_config
         return cls(model=model, processor=processor, generate_defaults=generate_defaults)
 
