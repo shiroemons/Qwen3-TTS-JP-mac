@@ -13,7 +13,11 @@ macOS Apple Silicon 向け Qwen3-TTS 日本語対応フォーク
 - **日本語 GUI** — Gradio デモ UI を完全日本語化
 - **Whisper 自動文字起こし** — 音声クローン用の参照テキストを自動生成
 - **簡単セットアップ** — devbox / uv によるワンコマンド環境構築
+- **使い方ガイド** — Driver.js によるインタラクティブなオンボーディングツアー
+- **音声自動保存** — 生成した音声を `outputs/` に自動保存（オプション）
 - **10言語対応** — 中国語, 英語, 日本語, 韓国語, ドイツ語, フランス語, ロシア語, ポルトガル語, スペイン語, イタリア語
+
+![VoiceClone デモ画面](assets/demo_voice_clone.jpeg)
 
 ### 3つの音声生成モード
 
@@ -118,6 +122,10 @@ uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
 
 ブラウザで `http://localhost:8000` を開いてください。
 
+**Web UI の機能:**
+- **自動保存** — 「自動保存」チェックボックスを ON にすると、生成した音声が `outputs/` ディレクトリに WAV 形式で自動保存されます
+- **使い方ガイド** — 「使い方」ボタンをクリックすると、各機能を順番に案内するインタラクティブツアーが起動します
+
 ### Python API
 
 #### CustomVoice
@@ -170,7 +178,7 @@ sf.write("output_clone.wav", wavs[0], sr)
 
 ## Whisper 自動文字起こし
 
-VoiceClone モードでは、参照音声のテキストが必要です。Web UI の「Whisper 文字起こし」タブで自動生成できます。
+VoiceClone モードでは、参照音声のテキストが必要です。「ボイスクローン」タブの「自動文字起こし」ボタンで参照テキストを自動生成できます。
 
 ```bash
 # Whisper サポートをインストール
@@ -179,7 +187,7 @@ uv sync --extra whisper
 
 対応モデル: `tiny`, `base`, `small`, `medium`, `large-v3`
 
-> **Note:** faster-whisper は MPS 非対応のため CPU で動作します。
+> **Note:** faster-whisper は MPS 非対応のため CPU で動作します。Whisper が未インストールの場合、文字起こし UI は自動的に非表示になります。
 
 ## トラブルシューティング
 
@@ -219,6 +227,18 @@ uv run huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
 uv run huggingface-cli download Qwen/Qwen3-TTS-Tokenizer-12Hz
 ```
 
+## 開発
+
+### ホットリロード開発モード
+
+UI の変更をリアルタイムで確認しながら開発できます。モデルは初回起動時に1回だけ読み込まれ、`qwen_tts/` 配下の `.py` ファイルの変更がブラウザに即座に反映されます。
+
+```bash
+devbox run dev:custom    # CustomVoice ホットリロード
+devbox run dev:design    # VoiceDesign ホットリロード
+devbox run dev:clone     # VoiceClone ホットリロード
+```
+
 ## Fine-tuning
 
 macOS (MPS) での Fine-tuning は**実験的**です。
@@ -249,6 +269,9 @@ uv run python finetuning/sft_12hz.py \
 | 日本語 GUI | Gradio デモの全 UI を日本語化 |
 | Whisper 統合 | `faster-whisper` によるオプション文字起こし |
 | 開発環境 | devbox + uv によるセットアップ自動化 |
+| 使い方ガイド | Driver.js によるインタラクティブツアー |
+| 音声自動保存 | 生成音声の `outputs/` 自動保存機能 |
+| ホットリロード | Gradio dev モードによる高速 UI 開発 |
 | sox 依存 | Python パッケージから除外（システム依存として管理） |
 
 ## ライセンス
