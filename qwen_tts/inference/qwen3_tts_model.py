@@ -118,12 +118,23 @@ class Qwen3TTSModel:
         processor = AutoProcessor.from_pretrained(pretrained_model_name_or_path, fix_mistral_regex=True,)
 
         # Suppress HuggingFace "Setting pad_token_id to eos_token_id" warning
-        # by explicitly setting pad_token_id on the talker's generation_config.
+        # by explicitly setting pad_token_id on generation_config of GenerationMixin
+        # sub-models. The talker config uses codec_eos_token_id (not the standard
+        # eos_token_id), so generation_config.eos_token_id may be None at load time
+        # even though eos_token_id is passed via kwargs at generate() time.
         talker = getattr(model, "talker", None)
+        codec_eos = getattr(model.config.talker_config, "codec_eos_token_id", None)
         if talker is not None and hasattr(talker, "generation_config"):
             gc = talker.generation_config
-            if gc.pad_token_id is None and gc.eos_token_id is not None:
-                gc.pad_token_id = gc.eos_token_id
+            if gc.pad_token_id is None:
+                gc.pad_token_id = gc.eos_token_id if gc.eos_token_id is not None else codec_eos
+
+            # Also suppress for the talker's code_predictor sub-model.
+            code_predictor = getattr(talker, "code_predictor", None)
+            if code_predictor is not None and hasattr(code_predictor, "generation_config"):
+                gc = code_predictor.generation_config
+                if gc.pad_token_id is None:
+                    gc.pad_token_id = gc.eos_token_id if gc.eos_token_id is not None else codec_eos
 
         generate_defaults = model.generate_config
         return cls(model=model, processor=processor, generate_defaults=generate_defaults)
