@@ -93,14 +93,12 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
   function startTour() {
     function ensureTab(idx) {
       let btn;
-      if (idx <= 7) btn = '#vc-tab-clone-button';
-      else if (idx <= 19) btn = '#vc-tab-save-load-button';
-      else btn = '#vc-tab-whisper-button';
+      if (idx <= 9) btn = '#vc-tab-clone-button';
+      else btn = '#vc-tab-save-load-button';
       document.querySelector(btn)?.click();
     }
     function getStartIndex() {
-      if (document.querySelector('#vc-tab-whisper-button[aria-selected="true"]')) return 20;
-      if (document.querySelector('#vc-tab-save-load-button[aria-selected="true"]')) return 8;
+      if (document.querySelector('#vc-tab-save-load-button[aria-selected="true"]')) return 10;
       return 0;
     }
     const d = window.driver.js.driver({
@@ -127,10 +125,26 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
           }
         },
         {
+          element: '#vc-whisper-model',
+          popover: {
+            title: 'Whisper モデル',
+            description: '精度と速度のバランスで選択します。base が推奨です。large-v3 は高精度ですが処理が遅くなります',
+            side: 'right', align: 'start'
+          }
+        },
+        {
+          element: '#vc-whisper-btn',
+          popover: {
+            title: '文字起こし',
+            description: '参照音声をアップロード後にクリックすると、Whisper が音声をテキストに変換し参照テキストに自動入力します',
+            side: 'right', align: 'start'
+          }
+        },
+        {
           element: '#vc-ref-text',
           popover: {
             title: '参照テキスト',
-            description: 'アップロードした音声の書き起こしを入力します。「Whisper 文字起こし」タブで自動生成も可能です',
+            description: 'アップロードした音声の書き起こしを入力します。文字起こしボタンで自動入力も可能です',
             side: 'right', align: 'start'
           }
         },
@@ -275,46 +289,6 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
           popover: {
             title: 'ステータス（読込用）',
             description: '保存・読込・生成の進行状況やエラーメッセージがここに表示されます',
-            side: 'left', align: 'start'
-          }
-        },
-        {
-          element: '#vc-tab-whisper-button',
-          popover: {
-            title: 'Whisper 文字起こしタブ',
-            description: '参照音声の書き起こしを自動生成する補助ツールです。faster-whisper のインストールが必要です',
-            side: 'bottom', align: 'center'
-          }
-        },
-        {
-          element: '#vc-whisper-model',
-          popover: {
-            title: 'Whisper モデルサイズ',
-            description: '精度と速度のバランスで選択します。base が推奨です。large-v3 は高精度ですが処理が遅くなります',
-            side: 'right', align: 'start'
-          }
-        },
-        {
-          element: '#vc-whisper-audio',
-          popover: {
-            title: '音声ファイル',
-            description: '文字起こしする音声ファイルをアップロードします。参照音声と同じファイルを使用してください',
-            side: 'right', align: 'start'
-          }
-        },
-        {
-          element: '#vc-whisper-btn',
-          popover: {
-            title: '文字起こし実行',
-            description: '音声ファイルをアップロードしてクリックすると、Whisper が音声をテキストに変換します',
-            side: 'top', align: 'center'
-          }
-        },
-        {
-          element: '#vc-whisper-result',
-          popover: {
-            title: '文字起こし結果',
-            description: '変換されたテキストがここに表示されます。結果をコピーして「クローン & 生成」タブの「参照テキスト」に貼り付けてください',
             side: 'left', align: 'start'
           }
         }
@@ -722,6 +696,16 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 label="参照音声",
                                 elem_id="vc-ref-audio",
                             )
+                            with gr.Group(visible=WHISPER_AVAILABLE):
+                                whisper_model_dd = gr.Dropdown(
+                                    label="Whisper モデル",
+                                    choices=WHISPER_MODELS, value="base",
+                                    interactive=True, elem_id="vc-whisper-model",
+                                )
+                                whisper_btn = gr.Button(
+                                    "文字起こし", variant="secondary",
+                                    elem_id="vc-whisper-btn",
+                                )
                             ref_text = gr.Textbox(
                                 label="参照音声テキスト",
                                 lines=2,
@@ -782,6 +766,18 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         inputs=[ref_audio, ref_text, xvec_only, text_in, lang_in],
                         outputs=[audio_out, err],
                     )
+
+                    def run_whisper_and_fill(ref_aud, model_size: str):
+                        if ref_aud is None:
+                            return "参照音声をアップロードしてください。"
+                        return _transcribe_audio(ref_aud, model_size)
+
+                    if WHISPER_AVAILABLE:
+                        whisper_btn.click(
+                            run_whisper_and_fill,
+                            inputs=[ref_audio, whisper_model_dd],
+                            outputs=[ref_text],
+                        )
 
                 with gr.Tab("音声の保存 / 読込", elem_id="vc-tab-save-load"):
                     with gr.Row():
@@ -912,44 +908,6 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
                     gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2], outputs=[audio_out2, err2])
-
-                with gr.Tab("Whisper 文字起こし", elem_id="vc-tab-whisper"):
-                    with gr.Row():
-                        with gr.Column(scale=2):
-                            gr.Markdown(
-                                f"""
-### Whisper 文字起こし
-音声ファイルをアップロードしてテキストに変換します。
-**faster-whisper ステータス:** `{"利用可能" if WHISPER_AVAILABLE else "未インストール (pip install faster-whisper)"}`
-"""
-                            )
-                            whisper_model_dd = gr.Dropdown(
-                                label="Whisper モデルサイズ",
-                                choices=WHISPER_MODELS,
-                                value="base",
-                                interactive=True,
-                                elem_id="vc-whisper-model",
-                            )
-                            whisper_audio_in = gr.Audio(
-                                label="音声ファイル",
-                                elem_id="vc-whisper-audio",
-                            )
-                            whisper_btn = gr.Button("文字起こし", variant="primary", elem_id="vc-whisper-btn")
-                        with gr.Column(scale=3):
-                            whisper_text_out = gr.Textbox(
-                                label="文字起こし結果",
-                                lines=6,
-                                elem_id="vc-whisper-result",
-                            )
-
-                    def run_whisper_transcribe(audio, model_size: str):
-                        return _transcribe_audio(audio, model_size)
-
-                    whisper_btn.click(
-                        run_whisper_transcribe,
-                        inputs=[whisper_audio_in, whisper_model_dd],
-                        outputs=[whisper_text_out],
-                    )
 
         gr.Markdown(
             """
