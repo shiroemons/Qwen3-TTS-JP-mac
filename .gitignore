@@ -28,4 +28,5 @@ env/
 models/
 *.wav
 output/
+outputs/
 *.pt

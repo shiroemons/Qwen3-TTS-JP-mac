@@ -546,6 +546,20 @@ def _wav_to_gradio_audio(wav: np.ndarray, sr: int) -> Tuple[int, np.ndarray]:
     return sr, wav
 
 
+def _save_audio_to_outputs(wav: np.ndarray, sr: int, prefix: str) -> str:
+    """WAVファイルを outputs/ に保存し、パスを返す"""
+    import datetime
+    import soundfile as sf
+
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "outputs")
+    output_dir = os.path.normpath(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filepath = os.path.join(output_dir, f"{prefix}_{timestamp}.wav")
+    sf.write(filepath, wav, sr)
+    return filepath
+
+
 def _detect_model_kind(ckpt: str, tts: Qwen3TTSModel) -> str:
     mt = getattr(tts.model, "tts_model_type", None)
     if mt in ("custom_voice", "voice_design", "base"):
@@ -626,13 +640,17 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         lines=2,
                         placeholder="例：怒った口調で話してください",
                     )
+                    auto_save = gr.Checkbox(
+                        label="自動保存（outputs/ に WAV を保存）",
+                        value=False,
+                    )
                     btn = gr.Button("⑤ 音声生成", variant="primary")
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
                     err = gr.Textbox(label="結果", lines=1)
 
-            def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str, progress=gr.Progress()):
+            def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str, save: bool, progress=gr.Progress()):
                 try:
                     if not text or not text.strip():
                         return None, "テキストを入力してください。"
@@ -652,11 +670,14 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     progress(0.9, desc="波形をデコード中...")
                     result = _wav_to_gradio_audio(wavs[0], sr)
                     progress(1.0, desc="完了")
+                    if save:
+                        path = _save_audio_to_outputs(wavs[0], sr, "custom_voice")
+                        return result, f"生成完了（保存先: {path}）"
                     return result, "生成完了"
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
-            btn.click(run_instruct, inputs=[text_in, lang_in, spk_in, instruct_in], outputs=[audio_out, err])
+            btn.click(run_instruct, inputs=[text_in, lang_in, spk_in, instruct_in, auto_save], outputs=[audio_out, err])
 
         elif model_kind == "voice_design":
             with gr.Row():
@@ -682,13 +703,17 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         info="どんな声で読み上げるか自由に指示できます",
                         placeholder="例：落ち着いた低めの男性の声で、ゆっくり丁寧に",
                     )
+                    auto_save = gr.Checkbox(
+                        label="自動保存（outputs/ に WAV を保存）",
+                        value=False,
+                    )
                     btn = gr.Button("④ 音声生成", variant="primary")
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
                     err = gr.Textbox(label="結果", lines=1)
 
-            def run_voice_design(text: str, lang_disp: str, design: str, progress=gr.Progress()):
+            def run_voice_design(text: str, lang_disp: str, design: str, save: bool, progress=gr.Progress()):
                 try:
                     if not text or not text.strip():
                         return None, "テキストを入力してください。"
@@ -706,11 +731,14 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     progress(0.9, desc="波形をデコード中...")
                     result = _wav_to_gradio_audio(wavs[0], sr)
                     progress(1.0, desc="完了")
+                    if save:
+                        path = _save_audio_to_outputs(wavs[0], sr, "voice_design")
+                        return result, f"生成完了（保存先: {path}）"
                     return result, "生成完了"
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
-            btn.click(run_voice_design, inputs=[text_in, lang_in, design_in], outputs=[audio_out, err])
+            btn.click(run_voice_design, inputs=[text_in, lang_in, design_in, auto_save], outputs=[audio_out, err])
 
         else:  # voice_clone for base
             tour_btn = gr.Button(
@@ -767,6 +795,10 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 interactive=True,
                                 elem_id="vc-lang",
                             )
+                            auto_save = gr.Checkbox(
+                                label="自動保存（outputs/ に WAV を保存）",
+                                value=False,
+                            )
                             btn = gr.Button("⑥ 音声生成", variant="primary", elem_id="vc-generate-btn")
 
                         with gr.Column(scale=3):
@@ -774,7 +806,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             audio_out = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-audio-out")
                             err = gr.Textbox(label="結果", lines=1, elem_id="vc-status")
 
-                    def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str, progress=gr.Progress()):
+                    def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str, save: bool, progress=gr.Progress()):
                         try:
                             if not text or not text.strip():
                                 return None, "合成テキストを入力してください。"
@@ -798,13 +830,16 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             progress(0.9, desc="波形をデコード中...")
                             result = _wav_to_gradio_audio(wavs[0], sr)
                             progress(1.0, desc="完了")
+                            if save:
+                                path = _save_audio_to_outputs(wavs[0], sr, "voice_clone")
+                                return result, f"生成完了（保存先: {path}）"
                             return result, "生成完了"
                         except Exception as e:
                             return None, f"{type(e).__name__}: {e}"
 
                     btn.click(
                         run_voice_clone,
-                        inputs=[ref_audio, ref_text, xvec_only, text_in, lang_in],
+                        inputs=[ref_audio, ref_text, xvec_only, text_in, lang_in, auto_save],
                         outputs=[audio_out, err],
                     )
 
@@ -871,6 +906,10 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                                 interactive=True,
                                 elem_id="vc-load-lang",
                             )
+                            auto_save2 = gr.Checkbox(
+                                label="自動保存（outputs/ に WAV を保存）",
+                                value=False,
+                            )
                             gen_btn2 = gr.Button("④ 音声生成", variant="primary", elem_id="vc-load-gen-btn")
 
                         with gr.Column(scale=3):
@@ -902,7 +941,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         except Exception as e:
                             return None, f"{type(e).__name__}: {e}"
 
-                    def load_prompt_and_gen(file_obj, text: str, lang_disp: str, progress=gr.Progress()):
+                    def load_prompt_and_gen(file_obj, text: str, lang_disp: str, save: bool, progress=gr.Progress()):
                         try:
                             if file_obj is None:
                                 return None, "音声ファイルをアップロードしてください。"
@@ -954,6 +993,9 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             progress(0.9, desc="波形をデコード中...")
                             result = _wav_to_gradio_audio(wavs[0], sr)
                             progress(1.0, desc="完了")
+                            if save:
+                                path = _save_audio_to_outputs(wavs[0], sr, "voice_clone_load")
+                                return result, f"生成完了（保存先: {path}）"
                             return result, "生成完了"
                         except Exception as e:
                             return None, (
@@ -962,7 +1004,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             )
 
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
-                    gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2], outputs=[audio_out2, err2])
+                    gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2, auto_save2], outputs=[audio_out2, err2])
 
         gr.Markdown(DISCLAIMER_TEXT)
 
