@@ -6,7 +6,7 @@
 
 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) は Alibaba Qwen チームが開発した多言語テキスト音声合成 (TTS) モデルです。オリジナルは Linux/CUDA 環境を前提に開発されており、推奨される [FlashAttention 2](https://github.com/Dao-AILab/flash-attention) は macOS では動作しません。
 
-本フォークは **Docker や仮想マシンを使わずに、macOS Apple Silicon (M1/M2/M3/M4) 上で Qwen3-TTS を直接動作** させるための対応を行っています。また、Windows 対応フォーク [Qwen3-TTS-JP](https://github.com/hiroki-abe-58/Qwen3-TTS-JP) の日本語ローカライズを引き継ぎ、GUI の日本語化、Whisper 統合、devbox によるセットアップ自動化を追加しています。
+本フォークは **Docker や仮想マシンを使わずに、macOS Apple Silicon (M1/M2/M3/M4) 上で Qwen3-TTS を直接動作** させるための対応を行っています。また、Windows 対応フォーク [Qwen3-TTS-JP](https://github.com/hiroki-abe-58/Qwen3-TTS-JP) を参考に、GUI の日本語化、Whisper 統合、devbox によるセットアップ自動化を独自に実装しています。
 
 <p align="center">
   <img src="assets/demo_voice_clone.jpeg" width="90%" />
@@ -144,12 +144,12 @@ devbox run demo:clone     # VoiceClone (Base)
 ボイスクローン（Base モデル）で音声を複製する手順:
 
 1. **モデルの起動** — `devbox run demo:clone` または `uv run qwen-tts-demo Qwen/Qwen3-TTS-12Hz-1.7B-Base` で VoiceClone デモを起動
-2. **参照音声のアップロード** — 「クローン＆生成」タブで参照音声ファイル（WAV/MP3/FLAC）をアップロード（3秒程度の明瞭な音声が最適）
+2. **参照音声のアップロード** — 「ボイスクローン」タブで参照音声ファイル（WAV/MP3/FLAC）をアップロード（3秒程度の明瞭な音声が最適）
 3. **参照テキストの入力** — 参照音声の内容を「参照テキスト」欄に入力。Whisper がインストール済みの場合は「自動文字起こし」ボタンで自動入力可能
 4. **合成テキストの入力** — 生成したいテキストを入力
 5. **言語の選択** — ドロップダウンから対象言語を選択
 6. **音声の生成** — 「音声を生成」ボタンをクリック
-7. **保存** — 生成された音声をダウンロード、または「保存・読込」タブでプリセットとして保存
+7. **保存** — 生成された音声をダウンロード、または「音声データの保存・読込」タブでプリセットとして保存
 
 ### macOS ネイティブ対応のポイント
 
@@ -192,6 +192,20 @@ sf.write("output.wav", wavs[0], sr)
 #### VoiceDesign
 
 ```python
+import soundfile as sf
+from qwen_tts import Qwen3TTSModel
+from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
+
+setup_mps_env()
+device = detect_device()
+
+model = Qwen3TTSModel.from_pretrained(
+    "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    device_map=device,
+    dtype=detect_dtype(device),
+    attn_implementation=detect_attn_implementation(device),
+)
+
 wavs, sr = model.generate_voice_design(
     text="今日はいい天気ですね。",
     language="Japanese",
@@ -203,6 +217,20 @@ sf.write("output_design.wav", wavs[0], sr)
 #### VoiceClone
 
 ```python
+import soundfile as sf
+from qwen_tts import Qwen3TTSModel
+from qwen_tts.utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
+
+setup_mps_env()
+device = detect_device()
+
+model = Qwen3TTSModel.from_pretrained(
+    "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+    device_map=device,
+    dtype=detect_dtype(device),
+    attn_implementation=detect_attn_implementation(device),
+)
+
 wavs, sr = model.generate_voice_clone(
     text="合成したいテキストをここに入力します。",
     language="Japanese",
@@ -373,7 +401,7 @@ Apache License 2.0 — 詳細は [LICENSE](LICENSE) を参照してください�
 | ソフトウェア | ライセンス | 用途 |
 |---|---|---|
 | [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) | Apache 2.0 | TTS モデル本体（オリジナル） |
-| [Qwen3-TTS-JP](https://github.com/hiroki-abe-58/Qwen3-TTS-JP) | Apache 2.0 | Windows 対応・日本語ローカライズ（上流フォーク） |
+| [Qwen3-TTS-JP](https://github.com/hiroki-abe-58/Qwen3-TTS-JP) | Apache 2.0 | Windows 対応・日本語ローカライズ（参考） |
 | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) | MIT | 音声文字起こし（オプション依存） |
 | [OpenAI Whisper](https://github.com/openai/whisper) | MIT | Whisper モデル |
 

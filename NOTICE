@@ -8,15 +8,18 @@ This product includes software developed by:
    Licensed under the Apache License, Version 2.0
    https://github.com/QwenLM/Qwen3-TTS
 
-2. Qwen3-TTS-JP
-   Copyright 2026 hiroki-abe-58
-   Licensed under the Apache License, Version 2.0
-   https://github.com/hiroki-abe-58/Qwen3-TTS-JP
-
-3. faster-whisper (optional dependency)
+2. faster-whisper (optional dependency)
    Copyright SYSTRAN
    Licensed under the MIT License
    https://github.com/SYSTRAN/faster-whisper
+
+This product was developed with reference to:
+
+3. Qwen3-TTS-JP
+   Copyright 2026 hiroki-abe-58
+   Licensed under the Apache License, Version 2.0
+   https://github.com/hiroki-abe-58/Qwen3-TTS-JP
+   (Referenced for Japanese localization approach; no code was directly incorporated)
 
 Modifications in this fork (Qwen3-TTS-JP-mac):
 - macOS Apple Silicon (MPS) device support with automatic detection
