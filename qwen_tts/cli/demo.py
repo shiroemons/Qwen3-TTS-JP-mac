@@ -594,6 +594,8 @@ class ProgressStreamer(BaseStreamer):
         self.end_val = end_val
         self.token_count = 0
         self._first_put_time: float | None = None
+        self._max_progress = start
+        self._max_pct = 0
 
     def put(self, value):
         self.token_count += 1
@@ -606,7 +608,10 @@ class ProgressStreamer(BaseStreamer):
             effective_total = min(self.token_count + 20, self.max_new_tokens)
         fraction = min(self.token_count / effective_total, 1.0)
         progress = self.start + fraction * (self.end_val - self.start)
-        pct = int(fraction * 100)
+        progress = max(progress, self._max_progress)
+        self._max_progress = progress
+        pct = max(int(fraction * 100), self._max_pct)
+        self._max_pct = pct
         eta_str = ""
         if self.token_count >= 3 and elapsed > 0:
             tokens_per_sec = self.token_count / elapsed
@@ -625,7 +630,12 @@ class ProgressStreamer(BaseStreamer):
         )
 
     def end(self):
-        pass
+        elapsed_total = time.time() - self.t0
+        elapsed_str = f"{elapsed_total:.1f}秒経過"
+        self.callback(
+            1.0,
+            desc=f"音声コードを生成完了 (100%・{self.token_count}トークン・{elapsed_str})"
+        )
 
 
 def _estimate_tokens(text: str, language: str) -> int:
@@ -663,9 +673,9 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         font=[gr.themes.GoogleFont("Source Sans Pro"), "Arial", "sans-serif"],
     )
 
-    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;} .prose h3 {border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 12px;} .eta-bar { display: none !important; }"
+    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;} .prose h3 {border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 12px;} .eta-bar { display: none !important; } .meta-text { display: none !important; } .meta-text-center { display: none !important; }"
 
-    with gr.Blocks(theme=theme, css=css) as demo:
+    with gr.Blocks() as demo:
         gr.Markdown(
             f"""
 # Qwen3-TTS-JP-mac デモ
@@ -1118,7 +1128,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
         gr.Markdown(DISCLAIMER_TEXT)
 
-    return demo, {}
+    return demo, {"theme": theme, "css": css}
 
 
 def main(argv=None) -> int:
