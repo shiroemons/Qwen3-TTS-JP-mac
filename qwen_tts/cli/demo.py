@@ -20,12 +20,14 @@ Qwen3-TTS-JP-mac Gradio デモ
 import argparse
 import os
 import tempfile
+import time
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 import numpy as np
 import torch
+from transformers.generation.streamers import BaseStreamer
 
 from .. import Qwen3TTSModel, VoiceClonePromptItem
 from ..utils.device import detect_device, detect_dtype, detect_attn_implementation, setup_mps_env
@@ -191,8 +193,8 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-status',
           popover: {
-            title: '結果',
-            description: '処理の進行状況やエラーメッセージがここに表示されます',
+            title: 'ステータス',
+            description: '処理の進行状況・生成統計（経過時間・トークン数・音声長）やエラーメッセージがここに表示されます',
             side: 'left', align: 'start'
           }
         },
@@ -287,8 +289,8 @@ VOICE_CLONE_TOUR_CLICK_JS = """\
         {
           element: '#vc-load-status',
           popover: {
-            title: '結果（読込用）',
-            description: '保存・読込・生成の進行状況やエラーメッセージがここに表示されます',
+            title: 'ステータス（読込用）',
+            description: '保存・読込・生成の進行状況・生成統計やエラーメッセージがここに表示されます',
             side: 'left', align: 'start'
           }
         }
@@ -579,6 +581,67 @@ DISCLAIMER_TEXT = """\
 """
 
 
+class ProgressStreamer(BaseStreamer):
+    """トークン生成ごとにGradioプログレスバーを更新（ETA付き）"""
+
+    def __init__(self, estimated_tokens: int, max_new_tokens: int,
+                 callback, t0: float, start: float = 0.05, end_val: float = 0.85):
+        self.estimated_tokens = estimated_tokens
+        self.max_new_tokens = max_new_tokens
+        self.callback = callback
+        self.t0 = t0
+        self.start = start
+        self.end_val = end_val
+        self.token_count = 0
+        self._first_put_time: float | None = None
+
+    def put(self, value):
+        self.token_count += 1
+        now = time.time()
+        if self._first_put_time is None:
+            self._first_put_time = now
+        elapsed = now - self._first_put_time
+        effective_total = max(self.estimated_tokens, 1)
+        if self.token_count > effective_total:
+            effective_total = min(self.token_count + 20, self.max_new_tokens)
+        fraction = min(self.token_count / effective_total, 1.0)
+        progress = self.start + fraction * (self.end_val - self.start)
+        pct = int(fraction * 100)
+        eta_str = ""
+        if self.token_count >= 3 and elapsed > 0:
+            tokens_per_sec = self.token_count / elapsed
+            if tokens_per_sec > 1e-6:
+                remaining_tokens = max(effective_total - self.token_count, 0)
+                eta_sec = remaining_tokens / tokens_per_sec
+                if eta_sec >= 60:
+                    eta_str = f"・残り約{int(eta_sec // 60)}分{int(eta_sec % 60)}秒"
+                else:
+                    eta_str = f"・残り約{int(eta_sec)}秒"
+        elapsed_total = now - self.t0
+        elapsed_str = f"{elapsed_total:.1f}秒経過"
+        self.callback(
+            min(progress, self.end_val),
+            desc=f"音声コードを生成中... ({pct}%・{self.token_count}トークン・{elapsed_str}{eta_str})"
+        )
+
+    def end(self):
+        pass
+
+
+def _estimate_tokens(text: str, language: str) -> int:
+    """テキスト長と言語から予測トークン数を推定"""
+    char_count = len(text.strip())
+    lang_lower = (language or "auto").lower()
+    rates = {
+        "japanese": 2.5, "chinese": 3.5, "english": 0.7,
+        "korean": 2.0, "german": 0.8, "french": 0.9,
+        "russian": 0.9, "portuguese": 0.8, "spanish": 0.8, "italian": 0.8,
+    }
+    tokens_per_char = rates.get(lang_lower, 1.5)
+    estimated = int(char_count * tokens_per_char * 1.3)
+    return max(estimated, 24)
+
+
 def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]) -> tuple[gr.Blocks, Dict[str, Any]]:
     model_kind = _detect_model_kind(ckpt, tts)
 
@@ -600,9 +663,9 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
         font=[gr.themes.GoogleFont("Source Sans Pro"), "Arial", "sans-serif"],
     )
 
-    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;} .prose h3 {border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 12px;}"
+    css = ".gradio-container {max-width: none !important;} #vc-tour-btn {max-width: 160px; margin-left: auto;} .prose h3 {border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 12px;} .eta-bar { display: none !important; }"
 
-    with gr.Blocks() as demo:
+    with gr.Blocks(theme=theme, css=css) as demo:
         gr.Markdown(
             f"""
 # Qwen3-TTS-JP-mac デモ
@@ -648,7 +711,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
-                    err = gr.Textbox(label="結果", lines=1)
+                    err = gr.Textbox(label="ステータス", lines=1)
 
             def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str, save: bool, progress=gr.Progress()):
                 try:
@@ -658,26 +721,34 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         return None, "話者を選択してください。"
                     language = lang_map.get(lang_disp, "Auto")
                     speaker = spk_map.get(spk_disp, spk_disp)
-                    progress(0.0, desc="音声を生成中...")
                     kwargs = _gen_common_kwargs()
+                    estimated = _estimate_tokens(text, language)
+                    max_new = kwargs.get("max_new_tokens", 2048)
+                    t0 = time.time()
+                    streamer = ProgressStreamer(estimated, max_new, progress, t0)
                     wavs, sr = tts.generate_custom_voice(
                         text=text.strip(),
                         language=language,
                         speaker=speaker,
                         instruct=(instruct or "").strip() or None,
+                        streamer=streamer,
                         **kwargs,
                     )
-                    progress(0.9, desc="波形をデコード中...")
+                    progress(0.90, desc="音声データを変換中...")
                     result = _wav_to_gradio_audio(wavs[0], sr)
                     progress(1.0, desc="完了")
+                    elapsed = time.time() - t0
+                    tokens = streamer.token_count
+                    audio_sec = len(wavs[0]) / sr
+                    stats = f"生成完了 | {elapsed:.1f}秒 | {tokens}トークン | 音声: {audio_sec:.1f}秒"
                     if save:
                         path = _save_audio_to_outputs(wavs[0], sr, "custom_voice")
-                        return result, f"生成完了（保存先: {path}）"
-                    return result, "生成完了"
+                        stats += f"（保存先: {path}）"
+                    return result, stats
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
-            btn.click(run_instruct, inputs=[text_in, lang_in, spk_in, instruct_in, auto_save], outputs=[audio_out, err])
+            btn.click(run_instruct, inputs=[text_in, lang_in, spk_in, instruct_in, auto_save], outputs=[audio_out, err], show_progress="full", show_progress_on=[err])
 
         elif model_kind == "voice_design":
             with gr.Row():
@@ -711,7 +782,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
-                    err = gr.Textbox(label="結果", lines=1)
+                    err = gr.Textbox(label="ステータス", lines=1)
 
             def run_voice_design(text: str, lang_disp: str, design: str, save: bool, progress=gr.Progress()):
                 try:
@@ -720,25 +791,33 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     if not design or not design.strip():
                         return None, "音声デザイン指示を入力してください。"
                     language = lang_map.get(lang_disp, "Auto")
-                    progress(0.0, desc="音声を生成中...")
                     kwargs = _gen_common_kwargs()
+                    estimated = _estimate_tokens(text, language)
+                    max_new = kwargs.get("max_new_tokens", 2048)
+                    t0 = time.time()
+                    streamer = ProgressStreamer(estimated, max_new, progress, t0)
                     wavs, sr = tts.generate_voice_design(
                         text=text.strip(),
                         language=language,
                         instruct=design.strip(),
+                        streamer=streamer,
                         **kwargs,
                     )
-                    progress(0.9, desc="波形をデコード中...")
+                    progress(0.90, desc="音声データを変換中...")
                     result = _wav_to_gradio_audio(wavs[0], sr)
                     progress(1.0, desc="完了")
+                    elapsed = time.time() - t0
+                    tokens = streamer.token_count
+                    audio_sec = len(wavs[0]) / sr
+                    stats = f"生成完了 | {elapsed:.1f}秒 | {tokens}トークン | 音声: {audio_sec:.1f}秒"
                     if save:
                         path = _save_audio_to_outputs(wavs[0], sr, "voice_design")
-                        return result, f"生成完了（保存先: {path}）"
-                    return result, "生成完了"
+                        stats += f"（保存先: {path}）"
+                    return result, stats
                 except Exception as e:
                     return None, f"{type(e).__name__}: {e}"
 
-            btn.click(run_voice_design, inputs=[text_in, lang_in, design_in, auto_save], outputs=[audio_out, err])
+            btn.click(run_voice_design, inputs=[text_in, lang_in, design_in, auto_save], outputs=[audio_out, err], show_progress="full", show_progress_on=[err])
 
         else:  # voice_clone for base
             tour_btn = gr.Button(
@@ -804,7 +883,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         with gr.Column(scale=3):
                             gr.Markdown("### 生成結果")
                             audio_out = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-audio-out")
-                            err = gr.Textbox(label="結果", lines=1, elem_id="vc-status")
+                            err = gr.Textbox(label="ステータス", lines=1, elem_id="vc-status")
 
                     def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str, save: bool, progress=gr.Progress()):
                         try:
@@ -818,22 +897,30 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                             language = lang_map.get(lang_disp, "Auto")
                             kwargs = _gen_common_kwargs()
                             progress(0.0, desc="音声の特徴を抽出中...")
-                            progress(0.1, desc="音声コードを生成中...")
+                            estimated = _estimate_tokens(text, language)
+                            max_new = kwargs.get("max_new_tokens", 2048)
+                            t0 = time.time()
+                            streamer = ProgressStreamer(estimated, max_new, progress, t0)
                             wavs, sr = tts.generate_voice_clone(
                                 text=text.strip(),
                                 language=language,
                                 ref_audio=at,
                                 ref_text=(ref_txt.strip() if ref_txt else None),
                                 x_vector_only_mode=bool(use_xvec),
+                                streamer=streamer,
                                 **kwargs,
                             )
-                            progress(0.9, desc="波形をデコード中...")
+                            progress(0.90, desc="音声データを変換中...")
                             result = _wav_to_gradio_audio(wavs[0], sr)
                             progress(1.0, desc="完了")
+                            elapsed = time.time() - t0
+                            tokens = streamer.token_count
+                            audio_sec = len(wavs[0]) / sr
+                            stats = f"生成完了 | {elapsed:.1f}秒 | {tokens}トークン | 音声: {audio_sec:.1f}秒"
                             if save:
                                 path = _save_audio_to_outputs(wavs[0], sr, "voice_clone")
-                                return result, f"生成完了（保存先: {path}）"
-                            return result, "生成完了"
+                                stats += f"（保存先: {path}）"
+                            return result, stats
                         except Exception as e:
                             return None, f"{type(e).__name__}: {e}"
 
@@ -841,6 +928,8 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         run_voice_clone,
                         inputs=[ref_audio, ref_text, xvec_only, text_in, lang_in, auto_save],
                         outputs=[audio_out, err],
+                        show_progress="full",
+                        show_progress_on=[err],
                     )
 
                     def run_whisper_and_fill(ref_aud, model_size: str, progress=gr.Progress()):
@@ -914,7 +1003,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                         with gr.Column(scale=3):
                             audio_out2 = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-load-audio-out")
-                            err2 = gr.Textbox(label="結果", lines=1, elem_id="vc-load-status")
+                            err2 = gr.Textbox(label="ステータス", lines=1, elem_id="vc-load-status")
 
                     def save_prompt(ref_aud, ref_txt: str, use_xvec: bool, progress=gr.Progress()):
                         try:
@@ -983,28 +1072,36 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                             language = lang_map.get(lang_disp, "Auto")
                             kwargs = _gen_common_kwargs()
-                            progress(0.2, desc="音声コードを生成中...")
+                            estimated = _estimate_tokens(text, language)
+                            max_new = kwargs.get("max_new_tokens", 2048)
+                            t0 = time.time()
+                            streamer = ProgressStreamer(estimated, max_new, progress, t0)
                             wavs, sr = tts.generate_voice_clone(
                                 text=text.strip(),
                                 language=language,
                                 voice_clone_prompt=items,
+                                streamer=streamer,
                                 **kwargs,
                             )
-                            progress(0.9, desc="波形をデコード中...")
+                            progress(0.90, desc="音声データを変換中...")
                             result = _wav_to_gradio_audio(wavs[0], sr)
                             progress(1.0, desc="完了")
+                            elapsed = time.time() - t0
+                            tokens = streamer.token_count
+                            audio_sec = len(wavs[0]) / sr
+                            stats = f"生成完了 | {elapsed:.1f}秒 | {tokens}トークン | 音声: {audio_sec:.1f}秒"
                             if save:
                                 path = _save_audio_to_outputs(wavs[0], sr, "voice_clone_load")
-                                return result, f"生成完了（保存先: {path}）"
-                            return result, "生成完了"
+                                stats += f"（保存先: {path}）"
+                            return result, stats
                         except Exception as e:
                             return None, (
                                 f"音声ファイルの読み込みまたは使用に失敗しました。ファイルの形式や内容を確認してください。\n"
                                 f"{type(e).__name__}: {e}"
                             )
 
-                    save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2])
-                    gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2, auto_save2], outputs=[audio_out2, err2])
+                    save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2], show_progress="full", show_progress_on=[err2])
+                    gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2, auto_save2], outputs=[audio_out2, err2], show_progress="full", show_progress_on=[err2])
 
         # 音声アップロードのファイルピッカーから .mp4 を除外
         demo.load(fn=None, inputs=None, outputs=None, js="""
@@ -1021,7 +1118,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
         gr.Markdown(DISCLAIMER_TEXT)
 
-    return demo, {"theme": theme, "css": css}
+    return demo, {}
 
 
 def main(argv=None) -> int:

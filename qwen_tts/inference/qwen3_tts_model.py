@@ -79,6 +79,27 @@ class Qwen3TTSModel:
             except StopIteration:
                 self.device = torch.device("cpu")
 
+        # Monkey-patch to pass streamer through to talker.generate()
+        # without modifying upstream core/models code
+        _streamer_holder = [None]
+        _original_generate = self.model.generate
+        _original_talker_generate = self.model.talker.generate
+
+        def _patched_generate(*args, **kwargs):
+            _streamer_holder[0] = kwargs.pop("streamer", None)
+            try:
+                return _original_generate(*args, **kwargs)
+            finally:
+                _streamer_holder[0] = None
+
+        def _patched_talker_generate(*args, **kwargs):
+            if _streamer_holder[0] is not None and "streamer" not in kwargs:
+                kwargs["streamer"] = _streamer_holder[0]
+            return _original_talker_generate(*args, **kwargs)
+
+        self.model.generate = _patched_generate
+        self.model.talker.generate = _patched_talker_generate
+
     @classmethod
     def from_pretrained(
         cls,
