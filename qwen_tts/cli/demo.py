@@ -721,6 +721,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
+                    loop_cb = gr.Checkbox(label="リピート再生", value=False, container=False)
                     err = gr.Textbox(label="ステータス", lines=1)
 
             def run_instruct(text: str, lang_disp: str, spk_disp: str, instruct: str, save: bool, progress=gr.Progress()):
@@ -759,6 +760,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     return None, f"{type(e).__name__}: {e}"
 
             btn.click(run_instruct, inputs=[text_in, lang_in, spk_in, instruct_in, auto_save], outputs=[audio_out, err], show_progress="full", show_progress_on=[err])
+            loop_cb.change(fn=lambda v: gr.update(loop=v), inputs=[loop_cb], outputs=[audio_out])
 
         elif model_kind == "voice_design":
             with gr.Row():
@@ -792,6 +794,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                 with gr.Column(scale=3):
                     gr.Markdown("### 生成結果")
                     audio_out = gr.Audio(label="生成された音声", type="numpy")
+                    loop_cb = gr.Checkbox(label="リピート再生", value=False, container=False)
                     err = gr.Textbox(label="ステータス", lines=1)
 
             def run_voice_design(text: str, lang_disp: str, design: str, save: bool, progress=gr.Progress()):
@@ -828,6 +831,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                     return None, f"{type(e).__name__}: {e}"
 
             btn.click(run_voice_design, inputs=[text_in, lang_in, design_in, auto_save], outputs=[audio_out, err], show_progress="full", show_progress_on=[err])
+            loop_cb.change(fn=lambda v: gr.update(loop=v), inputs=[loop_cb], outputs=[audio_out])
 
         else:  # voice_clone for base
             tour_btn = gr.Button(
@@ -893,6 +897,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         with gr.Column(scale=3):
                             gr.Markdown("### 生成結果")
                             audio_out = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-audio-out")
+                            loop_cb = gr.Checkbox(label="リピート再生", value=False, container=False)
                             err = gr.Textbox(label="ステータス", lines=1, elem_id="vc-status")
 
                     def run_voice_clone(ref_aud, ref_txt: str, use_xvec: bool, text: str, lang_disp: str, save: bool, progress=gr.Progress()):
@@ -941,6 +946,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
                         show_progress="full",
                         show_progress_on=[err],
                     )
+                    loop_cb.change(fn=lambda v: gr.update(loop=v), inputs=[loop_cb], outputs=[audio_out])
 
                     def run_whisper_and_fill(ref_aud, model_size: str, progress=gr.Progress()):
                         if ref_aud is None:
@@ -1013,6 +1019,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                         with gr.Column(scale=3):
                             audio_out2 = gr.Audio(label="生成された音声", type="numpy", elem_id="vc-load-audio-out")
+                            loop_cb2 = gr.Checkbox(label="リピート再生", value=False, container=False)
                             err2 = gr.Textbox(label="ステータス", lines=1, elem_id="vc-load-status")
 
                     def save_prompt(ref_aud, ref_txt: str, use_xvec: bool, progress=gr.Progress()):
@@ -1112,6 +1119,7 @@ def build_demo(tts: Qwen3TTSModel, ckpt: str, gen_kwargs_default: Dict[str, Any]
 
                     save_btn.click(save_prompt, inputs=[ref_audio_s, ref_text_s, xvec_only_s], outputs=[prompt_file_out, err2], show_progress="full", show_progress_on=[err2])
                     gen_btn2.click(load_prompt_and_gen, inputs=[prompt_file_in, text_in2, lang_in2, auto_save2], outputs=[audio_out2, err2], show_progress="full", show_progress_on=[err2])
+                    loop_cb2.change(fn=lambda v: gr.update(loop=v), inputs=[loop_cb2], outputs=[audio_out2])
 
         # 音声アップロードのファイルピッカーから .mp4 を除外
         demo.load(fn=None, inputs=None, outputs=None, js="""
